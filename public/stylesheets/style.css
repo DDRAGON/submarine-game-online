@@ -1,6 +1,11 @@
 body {
-  padding: 50px;
   font: 14px "Lucida Grande", Helvetica, Arial, sans-serif;
+  text-align: center;
+}
+
+canvas {
+  border-radius: 50%;
+  background-color: rgba(00,20,50,1.0);
 }
 
 a {
