@@ -2,31 +2,24 @@ function createWebSocketServer(io, game) {
 
     const rootIo = io.of('/');
     rootIo.on('connection', function (socket) {
-        console.log('connection came!');
-        game.newConnection(socket.id);
+        const playerObj = game.newConnection(socket.id);
 
-        socket.emit('map data', messages);
+        socket.emit('start data', playerObj);
+        socket.emit('map data', game.getMapData());
+        rootIo.emit('players data', game.getPlayers());
 
+        socket.on('player position', (playerObj) => {
+            game.updatePlayerPosition(socket.id, playerObj);
+        });
 
-        socket.on('message was submitted', function (data) {
-            console.log('message was submitted came!');
-
-            const time = new Date().getTime();
-            const newMessage = {
-                time: time,
-                message: data.message
-            };
-            messages.push(newMessage);
-
-            rootIo.emit('new message', newMessage);
+        socket.on('got item', (itemKey) => {
+            const newMapData = game.gotItem(socket.id, itemKey);
+            socket.emit('map data', newMapData);
         });
     });
 
 }
 
-
-
-
 module.exports = {
-    createWebSocketServer: createWebSocketServer
+    createWebSocketServer
 };
