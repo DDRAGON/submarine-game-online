@@ -1,6 +1,8 @@
 const gameObj = {
     playersMap: new Map(),
-    itemsMap: new Map()
+    itemsMap: new Map(),
+    airMap: new Map(),
+    flyingMissilesMap: new Map()
 };
 const fieldWidth = 10000;
 const fieldHeight = 10000;
@@ -8,14 +10,17 @@ const fieldHeight = 10000;
 init(); // 初期化（初期化はサーバー起動時に行う）
 
 function init() {
-    for (let i = 0; i < 500; i++) {
+    for (let i = 0; i < 400; i++) {
         addItem();
+    }
+    for (let a = 0; a < 600; a++) {
+        addAir();
     }
 }
 
 const gameTicker = setInterval(() => {
     move(gameObj.playersMap); // 潜水艦の移動
-    checkGetItem(gameObj.playersMap, gameObj.itemsMap);
+    checkGetItem(gameObj.playersMap, gameObj.itemsMap, gameObj.airMap);
 }, 33);
 
 function move(playersMap) {
@@ -43,16 +48,36 @@ function move(playersMap) {
 
 const submarineImageWidth = 42;
 const itemRadius = 4;
-function checkGetItem(playersMap, itemsMap) {
+const airRadius = 6;
+const addAirTime = 30;
+function checkGetItem(playersMap, itemsMap, airMap) {
     for (let [socketId, playerObj] of playersMap) {
+
         for (let [itemKey, itemObj] of itemsMap) {
             if (
                 Math.abs(playerObj.x - itemObj.x) <= (submarineImageWidth/2 + itemRadius) &&
                 Math.abs(playerObj.y - itemObj.y) <= (submarineImageWidth/2 + itemRadius)
             ) { // got item!
+
                 gameObj.itemsMap.delete(itemKey);
                 playerObj.missilesMany = playerObj.missilesMany > 5 ? 6 : playerObj.missilesMany + 1;
                 addItem();
+            }
+        }
+
+        for (let [airKey, airObj] of airMap) {
+            if (
+                Math.abs(playerObj.x - airObj.x) <= (submarineImageWidth/2 + airRadius) &&
+                Math.abs(playerObj.y - airObj.y) <= (submarineImageWidth/2 + airRadius)
+            ) { // got air!
+
+                gameObj.airMap.delete(airKey);
+                if (playerObj.airTime + addAirTime > 99) {
+                    playerObj.airTime = 99;
+                } else {
+                    playerObj.airTime += addAirTime;
+                }
+                addAir();
             }
         }
     }
@@ -72,7 +97,8 @@ function getItems() {
 function getMapData() {
     return {
         playersMap: Array.from(gameObj.playersMap),
-        itemsMap: Array.from(gameObj.itemsMap)
+        itemsMap: Array.from(gameObj.itemsMap),
+        airMap: Array.from(gameObj.airMap)
     };
 }
 
@@ -85,6 +111,7 @@ function newConnection(socketId) {
         isAlive: true,
         direction: 'right',
         missilesMany: 0,
+        airTime: 99,
         socketId: socketId
     };
     gameObj.playersMap.set(socketId, playerObj);
@@ -118,7 +145,7 @@ function addItem() {
     const itemY = Math.floor(Math.random() * fieldHeight);
     const itemKey = `${itemX},${itemY}`;
 
-    if (gameObj.itemsMap.get(itemKey)) { // アイテムの位置が被ってしまった場合は
+    if (gameObj.itemsMap.has(itemKey)) { // アイテムの位置が被ってしまった場合は
         return addItem(); // 場所が重複した場合は作り直し
     }
 
@@ -128,6 +155,23 @@ function addItem() {
         isAlive: true
     };
     gameObj.itemsMap.set(itemKey, itemObj);
+}
+
+function addAir() {
+    const airX = Math.floor(Math.random() * fieldWidth);
+    const airY = Math.floor(Math.random() * fieldHeight);
+    const airKey = `${airX},${airY}`;
+
+    if (gameObj.airMap.has(airKey)) { // アイテムの位置が被ってしまった場合は
+        return addAir(); // 場所が重複した場合は作り直し
+    }
+
+    const airObj = {
+        x: airX,
+        y: airY,
+        isAlive: true
+    };
+    gameObj.airMap.set(airKey, airObj);
 }
 
 

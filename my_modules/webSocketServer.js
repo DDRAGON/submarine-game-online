@@ -10,17 +10,6 @@ function createWebSocketServer(io, game) {
         socket.on('change direction', (direction) => {
             game.updatePlayerDirection(socket.id, direction);
         });
-
-        /*
-        socket.on('player position', (playerObj) => {
-            game.updatePlayerPosition(socket.id, playerObj);
-        });
-
-        socket.on('got item', (itemKey) => {
-            const newMapData = game.gotItem(socket.id, itemKey);
-            socket.emit('map data', newMapData);
-        });
-        */
     });
 
     const socketTicker = setInterval(() => {

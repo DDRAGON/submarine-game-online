@@ -15,7 +15,9 @@ const ctx2 = canvas2.getContext('2d');
 const gameObj = {
     playersMap: new Map(),
     itemsMap: new Map(),
-    itemRadius: 4
+    airMap: new Map(),
+    itemRadius: 4,
+    airRadius: 6
 };
 
 init();
@@ -36,7 +38,7 @@ function ticker() {
 
     ctx.clearRect(0, 0, canvas.width, canvas.height); // まっさら
     drawRadar();
-    drawMap(ctx, gameObj.playersMap, gameObj.itemsMap);
+    drawMap(ctx, gameObj.playersMap, gameObj.itemsMap, gameObj.airMap, gameObj.myPlayerObj);
     drawSubmarine(ctx, gameObj.myPlayerObj.direction);
     drawMissiles(gameObj.myPlayerObj.missilesMany);
     counter = (counter + 1) % 10000;
@@ -73,16 +75,48 @@ function drawRadar() {
     deg += 3;
 }
 
-function drawMap(ctx, playersMap, itemsMap) {
+function drawMap(ctx, playersMap, itemsMap, airMap, myPlayerObj) {
+
     // アイテムの描画
     ctx.fillStyle = "rgb(255, 0, 0)";
     for (const item of itemsMap.values()) {
         if (
-            Math.abs(gameObj.myPlayerObj.x - item.x) <= (canvas.width / 2) &&
-            Math.abs(gameObj.myPlayerObj.y - item.y) <= (canvas.height / 2)
+            Math.abs(myPlayerObj.x - item.x) <= (canvas.width / 2) &&
+            Math.abs(myPlayerObj.y - item.y) <= (canvas.height / 2)
         ) {
-            const itemDrawX = item.x - gameObj.myPlayerObj.x + canvas.width / 2;
-            const itemDrawY = item.y - gameObj.myPlayerObj.y + canvas.height / 2;
+            const itemDrawX = item.x - myPlayerObj.x + canvas.width / 2;
+            const itemDrawY = item.y - myPlayerObj.y + canvas.height / 2;
+            ctx.beginPath();
+            ctx.arc(itemDrawX, itemDrawY, gameObj.itemRadius, 0, Math.PI*2, true);
+            ctx.fill();
+        }
+    }
+
+    // 空気の描画
+    ctx.fillStyle = "rgb(0, 220, 255)";
+    for (const [airKey, airObj] of airMap) {
+        if (
+            Math.abs(myPlayerObj.x - airObj.x) <= (canvas.width / 2) &&
+            Math.abs(myPlayerObj.y - airObj.y) <= (canvas.height / 2)
+        ) {
+            const airDrawX = airObj.x - myPlayerObj.x + canvas.width / 2;
+            const airDrawY = airObj.y - myPlayerObj.y + canvas.height / 2;
+            ctx.beginPath();
+            ctx.arc(airDrawX, airDrawY, gameObj.airRadius, 0, Math.PI*2, true);
+            ctx.fill();
+        }
+    }
+
+    // 敵プレイヤーの描画
+    for (let [key, value] of playersMap) {
+        if (key === myPlayerObj.socketId) { continue; } // 自分は描画しない
+
+        if (
+            Math.abs(myPlayerObj.x - item.x) <= (canvas.width / 2) &&
+            Math.abs(myPlayerObj.y - item.y) <= (canvas.height / 2)
+        ) {
+            const itemDrawX = item.x - myPlayerObj.x + canvas.width / 2;
+            const itemDrawY = item.y - myPlayerObj.y + canvas.height / 2;
             ctx.beginPath();
             ctx.arc(itemDrawX, itemDrawY, gameObj.itemRadius, 0, Math.PI*2, true);
             ctx.fill();
@@ -162,15 +196,15 @@ function drawMissiles(missilesMany) {
 }
 
 socket.on('start data', (myPlayerObj) => {
-    myPlayerObj.direction = 'right';
     gameObj.myPlayerObj = myPlayerObj;
 });
 
 socket.on('map data', (mapData) => {
     gameObj.playersMap = new Map(mapData.playersMap);
     gameObj.itemsMap = new Map(mapData.itemsMap);
+    gameObj.airMap = new Map(mapData.airMap);
     gameObj.myPlayerObj = gameObj.playersMap.get(gameObj.myPlayerObj.socketId); // 自分の情報も更新
-    drawMap(ctx, gameObj.playersMap, gameObj.itemsMap);
+    drawMap(ctx, gameObj.playersMap, gameObj.itemsMap, gameObj.airMap, gameObj.myPlayerObj);
     drawSubmarine(ctx, gameObj.myPlayerObj.direction);
     drawMissiles(gameObj.myPlayerObj.missilesMany);
 });
