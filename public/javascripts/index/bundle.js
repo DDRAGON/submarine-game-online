@@ -3636,11 +3636,9 @@ function ticker() {
 
     ctx.clearRect(0, 0, canvas.width, canvas.height); // まっさら
     drawRadar();
-    move();
     drawMap(ctx, gameObj.playersMap, gameObj.itemsMap);
     drawSubmarine(ctx, gameObj.myPlayerObj.direction);
-    sendPosition(counter, gameObj.myPlayerObj, socket);
-    getItem(ctx, gameObj.myPlayerObj, gameObj.itemsMap);
+    drawMissiles(gameObj.myPlayerObj.missilesMany);
     counter = (counter + 1) % 10000;
 }
 setInterval(ticker, 30);
@@ -3692,8 +3690,6 @@ function drawMap(ctx, playersMap, itemsMap) {
                 ctx.beginPath();
                 ctx.arc(itemDrawX, itemDrawY, gameObj.itemRadius, 0, Math.PI * 2, true);
                 ctx.fill();
-
-                getItem(ctx, gameObj.myPlayerObj, item); // アイテム取得判定
             }
         }
     } catch (err) {
@@ -3755,6 +3751,10 @@ function sendPosition(counter, myPlayerObj, socket) {
     }
 }
 
+function sendChangeDirection(socket, direction) {
+    socket.emit('change direction', direction);
+}
+
 function getItem(ctx, myPlayerObj, item) {
     if (Math.abs(myPlayerObj.x - item.x) <= gameObj.submarineImage.width / 2 + gameObj.itemRadius && Math.abs(myPlayerObj.y - item.y) <= gameObj.submarineImage.width / 2 + gameObj.itemRadius) {
         // itemGot
@@ -3781,10 +3781,10 @@ socket.on('start data', function (myPlayerObj) {
 socket.on('map data', function (mapData) {
     gameObj.playersMap = new Map(mapData.playersMap);
     gameObj.itemsMap = new Map(mapData.itemsMap);
-});
-
-socket.on('players data', function (playersMap) {
-    gameObj.playersMap = playersMap;
+    gameObj.myPlayerObj = gameObj.playersMap.get(gameObj.myPlayerObj.socketId); // 自分の情報も更新
+    drawMap(ctx, gameObj.playersMap, gameObj.itemsMap);
+    drawSubmarine(ctx, gameObj.myPlayerObj.direction);
+    drawMissiles(gameObj.myPlayerObj.missilesMany);
 });
 
 (0, _jquery2.default)(window).keydown(function (event) {
@@ -3795,21 +3795,25 @@ socket.on('players data', function (playersMap) {
             if (gameObj.myPlayerObj.direction === 'left') break; // 変わってない
             gameObj.myPlayerObj.direction = 'left';
             drawSubmarine(ctx, 'left');
+            sendChangeDirection(socket, 'left');
             break;
         case 'ArrowUp':
             if (gameObj.myPlayerObj.direction === 'up') break; // 変わってない
             gameObj.myPlayerObj.direction = 'up';
             drawSubmarine(ctx, 'up');
+            sendChangeDirection(socket, 'up');
             break;
         case 'ArrowDown':
             if (gameObj.myPlayerObj.direction === 'down') break; // 変わってない
             gameObj.myPlayerObj.direction = 'down';
             drawSubmarine(ctx, 'down');
+            sendChangeDirection(socket, 'down');
             break;
         case 'ArrowRight':
             if (gameObj.myPlayerObj.direction === 'right') break; // 変わってない
             gameObj.myPlayerObj.direction = 'right';
             drawSubmarine(ctx, 'right');
+            sendChangeDirection(socket, 'right');
             break;
     }
 });

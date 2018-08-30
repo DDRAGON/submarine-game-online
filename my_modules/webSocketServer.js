@@ -5,9 +5,13 @@ function createWebSocketServer(io, game) {
         const playerObj = game.newConnection(socket.id);
 
         socket.emit('start data', playerObj);
-        socket.emit('map data', game.getMapData());
-        rootIo.emit('players data', game.getPlayers());
 
+
+        socket.on('change direction', (direction) => {
+            game.updatePlayerDirection(socket.id, direction);
+        });
+
+        /*
         socket.on('player position', (playerObj) => {
             game.updatePlayerPosition(socket.id, playerObj);
         });
@@ -16,8 +20,12 @@ function createWebSocketServer(io, game) {
             const newMapData = game.gotItem(socket.id, itemKey);
             socket.emit('map data', newMapData);
         });
+        */
     });
 
+    const socketTicker = setInterval(() => {
+        rootIo.emit('map data', game.getMapData()); // 全員に送信
+    }, 33);
 }
 
 module.exports = {
