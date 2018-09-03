@@ -166,14 +166,12 @@ function drawSubmarine(ctx, direction){
     ctx.restore();
 }
 
-function sendPosition(counter, myPlayerObj, socket) {
-    if (counter % 10 === 0) {
-        socket.emit('player position', myPlayerObj);
-    }
-}
-
 function sendChangeDirection(socket, direction) {
     socket.emit('change direction', direction);
+}
+
+function sendMissileEmit(socket, direction) {
+    socket.emit('missile emit', direction);
 }
 
 function getItem(ctx, myPlayerObj, item) {
@@ -227,23 +225,29 @@ $(window).keydown(function(event){
             drawSubmarine(ctx, 'left');
             sendChangeDirection(socket, 'left');
             break;
-        case 'ArrowUp' :
+        case 'ArrowUp':
             if (gameObj.myPlayerObj.direction === 'up') break; // 変わってない
             gameObj.myPlayerObj.direction = 'up';
             drawSubmarine(ctx, 'up');
             sendChangeDirection(socket, 'up');
             break;
-        case 'ArrowDown' :
+        case 'ArrowDown':
             if (gameObj.myPlayerObj.direction === 'down') break; // 変わってない
             gameObj.myPlayerObj.direction = 'down';
             drawSubmarine(ctx, 'down');
             sendChangeDirection(socket, 'down');
             break;
-        case 'ArrowRight' :
+        case 'ArrowRight':
             if (gameObj.myPlayerObj.direction === 'right') break; // 変わってない
             gameObj.myPlayerObj.direction = 'right';
             drawSubmarine(ctx, 'right');
             sendChangeDirection(socket, 'right');
+            break;
+        case ' ': // スペースキー
+            if (gameObj.myPlayerObj.missilesMany <= 0) break; // ミサイルのストックが 0
+            if (gameObj.myPlayerObj.missileTimeFlame > 0) break; // ミサイル撃ちたての時
+            gameObj.myPlayerObj.missileTimeFlame = 3;
+            sendMissileEmit(socket, gameObj.myPlayerObj.direction);
             break;
     }
 });

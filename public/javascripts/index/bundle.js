@@ -3862,8 +3862,8 @@ function drawMissiles(ctx2, missilesMany) {
 function drawAirTimer(ctx2, airTime) {
     ctx2.clearRect(0, 0, canvas2.width, canvas2.height); // まっさら
     ctx2.fillStyle = "rgb(0, 220, 250)";
-    ctx2.font = 'bold 32px Arial';
-    ctx2.fillText(airTime, 120, 30);
+    ctx2.font = 'bold 40px Arial';
+    ctx2.fillText(airTime, 110, 50);
 }
 
 socket.on('start data', function (myPlayerObj) {
@@ -3907,6 +3907,11 @@ socket.on('map data', function (mapData) {
             gameObj.myPlayerObj.direction = 'right';
             drawSubmarine(ctx, 'right');
             sendChangeDirection(socket, 'right');
+            break;
+        case ' ':
+            console.log('space key came!!!');
+            if (gameObj.myPlayerObj.missilesMany <= 0) break; // ミサイルのストックが 0
+
             break;
     }
 });

@@ -10,6 +10,10 @@ function createWebSocketServer(io, game) {
         socket.on('change direction', (direction) => {
             game.updatePlayerDirection(socket.id, direction);
         });
+
+        socket.on('missile emit', (direction) => {
+            game.missileEmit(socket.id, direction);
+        });
     });
 
     const socketTicker = setInterval(() => {
