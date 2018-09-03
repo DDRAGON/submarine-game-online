@@ -3611,7 +3611,7 @@ canvas.height = 500;
 var ctx = canvas.getContext('2d');
 var canvas2 = (0, _jquery2.default)('#score')[0];
 canvas2.width = 300;
-canvas2.height = 200;
+canvas2.height = 300;
 var ctx2 = canvas2.getContext('2d');
 
 var gameObj = {
@@ -3642,14 +3642,15 @@ function ticker() {
     drawRadar();
     drawMap(ctx, gameObj.playersMap, gameObj.itemsMap, gameObj.airMap, gameObj.myPlayerObj);
     drawSubmarine(ctx, gameObj.myPlayerObj.direction);
-    drawMissiles(gameObj.myPlayerObj.missilesMany);
+    drawAirTimer(ctx2, gameObj.myPlayerObj.airTime);
+    drawMissiles(ctx2, gameObj.myPlayerObj.missilesMany);
     counter = (counter + 1) % 10000;
 }
 setInterval(ticker, 33);
 
 var x = canvas.width / 2;
 var y = canvas.height / 2;
-var r = canvas.width / 2;
+var r = canvas.width * 1.5 / 2;
 function drawRadar() {
     ctx.save(); // セーブ
 
@@ -3668,7 +3669,7 @@ function drawRadar() {
     /* グラデーションをfillStyleプロパティにセット */
     ctx.fillStyle = grad;
 
-    ctx.arc(x, y, r, getRadian(0), getRadian(-45), true);
+    ctx.arc(x, y, r, getRadian(0), getRadian(-30), true);
     ctx.lineTo(x, y);
 
     ctx.fill();
@@ -3687,11 +3688,11 @@ function drawMap(ctx, playersMap, itemsMap, airMap, myPlayerObj) {
 
     try {
         for (var _iterator = itemsMap.values()[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
-            var _item = _step.value;
+            var item = _step.value;
 
-            if (Math.abs(myPlayerObj.x - _item.x) <= canvas.width / 2 && Math.abs(myPlayerObj.y - _item.y) <= canvas.height / 2) {
-                var itemDrawX = _item.x - myPlayerObj.x + canvas.width / 2;
-                var itemDrawY = _item.y - myPlayerObj.y + canvas.height / 2;
+            if (Math.abs(myPlayerObj.x - item.x) <= canvas.width / 2 && Math.abs(myPlayerObj.y - item.y) <= canvas.height / 2) {
+                var itemDrawX = item.x - myPlayerObj.x + canvas.width / 2;
+                var itemDrawY = item.y - myPlayerObj.y + canvas.height / 2;
                 ctx.beginPath();
                 ctx.arc(itemDrawX, itemDrawY, gameObj.itemRadius, 0, Math.PI * 2, true);
                 ctx.fill();
@@ -3764,15 +3765,15 @@ function drawMap(ctx, playersMap, itemsMap, airMap, myPlayerObj) {
             var _ref4 = _slicedToArray(_ref3, 2);
 
             var key = _ref4[0];
-            var value = _ref4[1];
+            var tekiPlayerObj = _ref4[1];
 
             if (key === myPlayerObj.socketId) {
                 continue;
             } // 自分は描画しない
 
-            if (Math.abs(myPlayerObj.x - item.x) <= canvas.width / 2 && Math.abs(myPlayerObj.y - item.y) <= canvas.height / 2) {
-                var _itemDrawX = item.x - myPlayerObj.x + canvas.width / 2;
-                var _itemDrawY = item.y - myPlayerObj.y + canvas.height / 2;
+            if (Math.abs(myPlayerObj.x - tekiPlayerObj.x) <= canvas.width / 2 && Math.abs(myPlayerObj.y - tekiPlayerObj.y) <= canvas.height / 2) {
+                var _itemDrawX = tekiPlayerObj.x - myPlayerObj.x + canvas.width / 2;
+                var _itemDrawY = tekiPlayerObj.y - myPlayerObj.y + canvas.height / 2;
                 ctx.beginPath();
                 ctx.arc(_itemDrawX, _itemDrawY, gameObj.itemRadius, 0, Math.PI * 2, true);
                 ctx.fill();
@@ -3852,11 +3853,17 @@ function getItem(ctx, myPlayerObj, item) {
     }
 }
 
-function drawMissiles(missilesMany) {
-    ctx2.clearRect(0, 0, canvas2.width, canvas2.height); // まっさら
+function drawMissiles(ctx2, missilesMany) {
     for (var i = 0; i < missilesMany; i++) {
-        ctx2.drawImage(gameObj.missileImage, 50 * i, 80);
+        ctx2.drawImage(gameObj.missileImage, 50 * i, 180);
     }
+}
+
+function drawAirTimer(ctx2, airTime) {
+    ctx2.clearRect(0, 0, canvas2.width, canvas2.height); // まっさら
+    ctx2.fillStyle = "rgb(0, 220, 250)";
+    ctx2.font = 'bold 32px Arial';
+    ctx2.fillText(airTime, 120, 30);
 }
 
 socket.on('start data', function (myPlayerObj) {

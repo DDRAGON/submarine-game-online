@@ -9,7 +9,7 @@ canvas.height = 500;
 const ctx = canvas.getContext('2d');
 const canvas2 = $('#score')[0];
 canvas2.width = 300;
-canvas2.height = 200;
+canvas2.height = 300;
 const ctx2 = canvas2.getContext('2d');
 
 const gameObj = {
@@ -40,14 +40,15 @@ function ticker() {
     drawRadar();
     drawMap(ctx, gameObj.playersMap, gameObj.itemsMap, gameObj.airMap, gameObj.myPlayerObj);
     drawSubmarine(ctx, gameObj.myPlayerObj.direction);
-    drawMissiles(gameObj.myPlayerObj.missilesMany);
+    drawAirTimer(ctx2, gameObj.myPlayerObj.airTime);
+    drawMissiles(ctx2, gameObj.myPlayerObj.missilesMany);
     counter = (counter + 1) % 10000;
 }
 setInterval(ticker, 33);
 
 const x = canvas.width / 2;
 const y = canvas.height / 2;
-const r = canvas.width / 2;
+const r = canvas.width * 1.5 / 2;
 function drawRadar() {
     ctx.save(); // セーブ
 
@@ -66,7 +67,7 @@ function drawRadar() {
     /* グラデーションをfillStyleプロパティにセット */
     ctx.fillStyle = grad;
 
-    ctx.arc(x, y, r, getRadian(0), getRadian(-45), true);
+    ctx.arc(x, y, r, getRadian(0), getRadian(-30), true);
     ctx.lineTo(x, y);
 
     ctx.fill();
@@ -108,15 +109,15 @@ function drawMap(ctx, playersMap, itemsMap, airMap, myPlayerObj) {
     }
 
     // 敵プレイヤーの描画
-    for (let [key, value] of playersMap) {
+    for (let [key, tekiPlayerObj] of playersMap) {
         if (key === myPlayerObj.socketId) { continue; } // 自分は描画しない
 
         if (
-            Math.abs(myPlayerObj.x - item.x) <= (canvas.width / 2) &&
-            Math.abs(myPlayerObj.y - item.y) <= (canvas.height / 2)
+            Math.abs(myPlayerObj.x - tekiPlayerObj.x) <= (canvas.width / 2) &&
+            Math.abs(myPlayerObj.y - tekiPlayerObj.y) <= (canvas.height / 2)
         ) {
-            const itemDrawX = item.x - myPlayerObj.x + canvas.width / 2;
-            const itemDrawY = item.y - myPlayerObj.y + canvas.height / 2;
+            const itemDrawX = tekiPlayerObj.x - myPlayerObj.x + canvas.width / 2;
+            const itemDrawY = tekiPlayerObj.y - myPlayerObj.y + canvas.height / 2;
             ctx.beginPath();
             ctx.arc(itemDrawX, itemDrawY, gameObj.itemRadius, 0, Math.PI*2, true);
             ctx.fill();
@@ -188,11 +189,17 @@ function getItem(ctx, myPlayerObj, item) {
     }
 }
 
-function drawMissiles(missilesMany) {
-    ctx2.clearRect(0, 0, canvas2.width, canvas2.height); // まっさら
+function drawMissiles(ctx2, missilesMany) {
     for (let i = 0; i < missilesMany; i++) {
-        ctx2.drawImage(gameObj.missileImage, 50 * i, 80);
+        ctx2.drawImage(gameObj.missileImage, 50 * i, 180);
     }
+}
+
+function drawAirTimer(ctx2, airTime) {
+   ctx2.clearRect(0, 0, canvas2.width, canvas2.height); // まっさら
+   ctx2.fillStyle = "rgb(0, 220, 250)";
+   ctx2.font = 'bold 40px Arial';
+   ctx2.fillText(airTime, 110, 50);
 }
 
 socket.on('start data', (myPlayerObj) => {

@@ -43,6 +43,20 @@ function move(playersMap) {
         if (value.x < 0) value.x += 10000;
         if (value.y < 0) value.y += 10000;
         if (value.y > 10000) value.y -= 10000;
+
+        value.aliveTime.clock += 1;
+        if (value.aliveTime.clock === 30) {
+            value.aliveTime.clock = 0;
+            value.aliveTime.seconds += 1;
+            decleaseAir(value);
+        }
+    }
+}
+
+function decleaseAir(playerObj) {
+    playerObj.airTime -= 1;
+    if (playerObj.airTime < 0) {
+        playerObj.isAlive = false;
     }
 }
 
@@ -112,6 +126,7 @@ function newConnection(socketId) {
         direction: 'right',
         missilesMany: 0,
         airTime: 99,
+        aliveTime: {'clock': 0, 'seconds': 0},
         socketId: socketId
     };
     gameObj.playersMap.set(socketId, playerObj);
