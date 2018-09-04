@@ -3619,7 +3619,8 @@ var gameObj = {
     itemsMap: new Map(),
     airMap: new Map(),
     itemRadius: 4,
-    airRadius: 6
+    airRadius: 6,
+    missileTimeFlame: 3
 };
 
 init();
@@ -3640,10 +3641,11 @@ function ticker() {
 
     ctx.clearRect(0, 0, canvas.width, canvas.height); // まっさら
     drawRadar();
-    drawMap(ctx, gameObj.playersMap, gameObj.itemsMap, gameObj.airMap, gameObj.myPlayerObj);
+    drawMap(ctx, gameObj.playersMap, gameObj.itemsMap, gameObj.airMap, gameObj.myPlayerObj, gameObj.flyingMissiles);
     drawSubmarine(ctx, gameObj.myPlayerObj.direction);
     drawAirTimer(ctx2, gameObj.myPlayerObj.airTime);
     drawMissiles(ctx2, gameObj.myPlayerObj.missilesMany);
+    gameObj.missileTimeFlame -= 1;
     counter = (counter + 1) % 10000;
 }
 setInterval(ticker, 33);
@@ -3678,7 +3680,10 @@ function drawRadar() {
     deg += 3;
 }
 
-function drawMap(ctx, playersMap, itemsMap, airMap, myPlayerObj) {
+var rotationDegreeByFlyingMissileDirection = {
+    'left': 270, 'up': 0, 'down': 180, 'right': 90
+};
+function drawMap(ctx, playersMap, itemsMap, airMap, myPlayerObj, flyingMissiles) {
 
     // アイテムの描画
     ctx.fillStyle = "rgb(255, 0, 0)";
@@ -3779,6 +3784,8 @@ function drawMap(ctx, playersMap, itemsMap, airMap, myPlayerObj) {
                 ctx.fill();
             }
         }
+
+        // 飛んでいるミサイルの描画
     } catch (err) {
         _didIteratorError3 = true;
         _iteratorError3 = err;
@@ -3790,6 +3797,41 @@ function drawMap(ctx, playersMap, itemsMap, airMap, myPlayerObj) {
         } finally {
             if (_didIteratorError3) {
                 throw _iteratorError3;
+            }
+        }
+    }
+
+    var _iteratorNormalCompletion4 = true;
+    var _didIteratorError4 = false;
+    var _iteratorError4 = undefined;
+
+    try {
+        for (var _iterator4 = flyingMissiles[Symbol.iterator](), _step4; !(_iteratorNormalCompletion4 = (_step4 = _iterator4.next()).done); _iteratorNormalCompletion4 = true) {
+            var flyingMissile = _step4.value;
+
+            if (Math.abs(myPlayerObj.x - flyingMissile.x) <= canvas.width / 2 && Math.abs(myPlayerObj.y - flyingMissile.y) <= canvas.height / 2) {
+                var flyingMissileDrawX = flyingMissile.x - myPlayerObj.x + canvas.width / 2;
+                var flyingMissileDrawY = flyingMissile.y - myPlayerObj.y + canvas.height / 2;
+                var rotationDegree = rotationDegreeByFlyingMissileDirection[flyingMissile.direction];
+                console.log(rotationDegree);
+                ctx.save();
+                ctx.translate(flyingMissileDrawX, flyingMissileDrawY);
+                ctx.rotate(getRadian(rotationDegree));
+                ctx.drawImage(gameObj.missileImage, -gameObj.missileImage.width / 2, -gameObj.missileImage.height / 2);
+                ctx.restore();
+            }
+        }
+    } catch (err) {
+        _didIteratorError4 = true;
+        _iteratorError4 = err;
+    } finally {
+        try {
+            if (!_iteratorNormalCompletion4 && _iterator4.return) {
+                _iterator4.return();
+            }
+        } finally {
+            if (_didIteratorError4) {
+                throw _iteratorError4;
             }
         }
     }
@@ -3832,14 +3874,12 @@ function drawSubmarine(ctx, direction) {
     ctx.restore();
 }
 
-function sendPosition(counter, myPlayerObj, socket) {
-    if (counter % 10 === 0) {
-        socket.emit('player position', myPlayerObj);
-    }
-}
-
 function sendChangeDirection(socket, direction) {
     socket.emit('change direction', direction);
+}
+
+function sendMissileEmit(socket, direction) {
+    socket.emit('missile emit', direction);
 }
 
 function getItem(ctx, myPlayerObj, item) {
@@ -3874,10 +3914,12 @@ socket.on('map data', function (mapData) {
     gameObj.playersMap = new Map(mapData.playersMap);
     gameObj.itemsMap = new Map(mapData.itemsMap);
     gameObj.airMap = new Map(mapData.airMap);
+    gameObj.flyingMissiles = mapData.flyingMissiles;
     gameObj.myPlayerObj = gameObj.playersMap.get(gameObj.myPlayerObj.socketId); // 自分の情報も更新
-    drawMap(ctx, gameObj.playersMap, gameObj.itemsMap, gameObj.airMap, gameObj.myPlayerObj);
-    drawSubmarine(ctx, gameObj.myPlayerObj.direction);
-    drawMissiles(gameObj.myPlayerObj.missilesMany);
+
+    //drawMap(ctx, gameObj.playersMap, gameObj.itemsMap, gameObj.airMap, gameObj.myPlayerObj);
+    //drawSubmarine(ctx, gameObj.myPlayerObj.direction);
+    //drawMissiles(gameObj.myPlayerObj.missilesMany);
 });
 
 (0, _jquery2.default)(window).keydown(function (event) {
@@ -3909,9 +3951,11 @@ socket.on('map data', function (mapData) {
             sendChangeDirection(socket, 'right');
             break;
         case ' ':
-            console.log('space key came!!!');
+            // スペースキー
             if (gameObj.myPlayerObj.missilesMany <= 0) break; // ミサイルのストックが 0
-
+            if (gameObj.missileTimeFlame > 0) break; // ミサイル撃ちたての時
+            gameObj.missileTimeFlame = 3;
+            sendMissileEmit(socket, gameObj.myPlayerObj.direction);
             break;
     }
 });

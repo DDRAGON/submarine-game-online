@@ -4,7 +4,9 @@ const gameObj = {
     airMap: new Map(),
     flyingMissiles: [],
     missileAliveFlame: 180,
-    missileSpeed: 3
+    missileSpeed: 3,
+    missileWidth: 30,
+    missileHeight: 30
 };
 const fieldWidth = 10000;
 const fieldHeight = 10000;
@@ -21,12 +23,12 @@ function init() {
 }
 
 const gameTicker = setInterval(() => {
-    movePlayer(gameObj.playersMap); // 潜水艦の移動
-    checkGetItem(gameObj.playersMap, gameObj.itemsMap, gameObj.airMap);
+    movePlayers(gameObj.playersMap); // 潜水艦の移動
     moveMissile(gameObj.flyingMissiles); // ミサイルの移動
+    checkGetItem(gameObj.playersMap, gameObj.itemsMap, gameObj.airMap, gameObj.flyingMissiles);
 }, 33);
 
-function movePlayer(playersMap) { // 潜水艦の移動
+function movePlayers(playersMap) { // 潜水艦の移動
     for (let [key, value] of playersMap) {
         switch (value.direction) {
             case 'left':
@@ -57,29 +59,28 @@ function movePlayer(playersMap) { // 潜水艦の移動
 }
 
 function moveMissile(flyingMissiles) { // ミサイルの移動
-    for (let i = 0; i <  flyingMissiles.length; i++) {
+    for (let i = flyingMissiles.length - 1; i >= 0  ; i--) {
         const missile = flyingMissiles[i];
 
         if (missile.aliveFlame === 0) {
-            flyingMissiles.splice(i, 0);
-            i--;
+            flyingMissiles.splice(i, 1);
             continue;
         }
 
-        missile.aliveFlame -= 1;
+        flyingMissiles[i].aliveFlame -= 1;
 
         switch (missile.direction) {
             case 'left':
-                missile.x -= gameObj.missileSpeed;
+                flyingMissiles[i].x -= gameObj.missileSpeed;
                 break;
             case 'up':
-                missile.y -= gameObj.missileSpeed;
+                flyingMissiles[i].y -= gameObj.missileSpeed;
                 break;
             case 'down':
-                missile.y += gameObj.missileSpeed;
+                flyingMissiles[i].y += gameObj.missileSpeed;
                 break;
             case 'right':
-                missile.x += gameObj.missileSpeed;
+                flyingMissiles[i].x += gameObj.missileSpeed;
                 break;
         }
     }
@@ -96,9 +97,10 @@ const submarineImageWidth = 42;
 const itemRadius = 4;
 const airRadius = 6;
 const addAirTime = 30;
-function checkGetItem(playersMap, itemsMap, airMap) {
+function checkGetItem(playersMap, itemsMap, airMap, flyingMissiles) {
     for (let [socketId, playerObj] of playersMap) {
 
+        // アイテムのミサイル（赤丸）
         for (let [itemKey, itemObj] of itemsMap) {
             if (
                 Math.abs(playerObj.x - itemObj.x) <= (submarineImageWidth/2 + itemRadius) &&
@@ -111,6 +113,7 @@ function checkGetItem(playersMap, itemsMap, airMap) {
             }
         }
 
+        // アイテムの空気（青丸）
         for (let [airKey, airObj] of airMap) {
             if (
                 Math.abs(playerObj.x - airObj.x) <= (submarineImageWidth/2 + airRadius) &&
@@ -124,6 +127,19 @@ function checkGetItem(playersMap, itemsMap, airMap) {
                     playerObj.airTime += addAirTime;
                 }
                 addAir();
+            }
+        }
+
+        // 撃ち放たれているミサイル
+        for (let i = flyingMissiles.length - 1; i >= 0  ; i--) {
+            const missile = flyingMissiles[i];
+
+            if (
+                Math.abs(playerObj.x - missile.x) <= (submarineImageWidth/2 + gameObj.missileWidth/2) &&
+                Math.abs(playerObj.y - missile.y) <= (submarineImageWidth/2 + gameObj.missileHeight/2)
+            ) {
+                playerObj.isAlive = false;
+                flyingMissiles.splice(i, 0);
             }
         }
     }
@@ -144,7 +160,8 @@ function getMapData() {
     return {
         playersMap: Array.from(gameObj.playersMap),
         itemsMap: Array.from(gameObj.itemsMap),
-        airMap: Array.from(gameObj.airMap)
+        airMap: Array.from(gameObj.airMap),
+        flyingMissiles: gameObj.flyingMissiles
     };
 }
 
@@ -157,7 +174,6 @@ function newConnection(socketId) {
         isAlive: true,
         direction: 'right',
         missilesMany: 0,
-        missileTimeFlame: 3,
         airTime: 99,
         aliveTime: {'clock': 0, 'seconds': 0},
         socketId: socketId
@@ -237,7 +253,6 @@ module.exports = {
     getItems,
     getPlayers,
     getMapData,
-    updatePlayerPosition,
     updatePlayerDirection,
     gotItem,
     missileEmit
