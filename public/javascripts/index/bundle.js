@@ -3625,12 +3625,20 @@ var gameObj = {
 
 init();
 function init() {
+    // 潜水艦の画像
     var submarineImage = new Image();
     submarineImage.src = '/images/submarine2.png';
     gameObj.submarineImage = submarineImage;
+
+    // ミサイルの画像
     var missileImage = new Image();
     missileImage.src = '/images/missile.png';
     gameObj.missileImage = missileImage;
+
+    // 爆発の画像集
+    var bomListImage = new Image();
+    bomListImage.src = '/images/bomlist.png';
+    gameObj.bomListImage = bomListImage;
 }
 
 var deg = 0;
@@ -3642,7 +3650,7 @@ function ticker() {
     ctx.clearRect(0, 0, canvas.width, canvas.height); // まっさら
     drawRadar();
     drawMap(ctx, gameObj.playersMap, gameObj.itemsMap, gameObj.airMap, gameObj.myPlayerObj, gameObj.flyingMissiles);
-    drawSubmarine(ctx, gameObj.myPlayerObj.direction);
+    drawSubmarine(ctx, gameObj.myPlayerObj);
     drawAirTimer(ctx2, gameObj.myPlayerObj.airTime);
     drawMissiles(ctx2, gameObj.myPlayerObj.missilesMany);
     gameObj.missileTimeFlame -= 1;
@@ -3813,7 +3821,6 @@ function drawMap(ctx, playersMap, itemsMap, airMap, myPlayerObj, flyingMissiles)
                 var flyingMissileDrawX = flyingMissile.x - myPlayerObj.x + canvas.width / 2;
                 var flyingMissileDrawY = flyingMissile.y - myPlayerObj.y + canvas.height / 2;
                 var rotationDegree = rotationDegreeByFlyingMissileDirection[flyingMissile.direction];
-                console.log(rotationDegree);
                 ctx.save();
                 ctx.translate(flyingMissileDrawX, flyingMissileDrawY);
                 ctx.rotate(getRadian(rotationDegree));
@@ -3861,17 +3868,31 @@ function move() {
 var rotationDegreeByDirection = {
     'left': 0, 'up': 270, 'down': 90, 'right': 0
 };
-function drawSubmarine(ctx, direction) {
-    var rotationDegree = rotationDegreeByDirection[direction];
+function drawSubmarine(ctx, myPlayerObj) {
+    if (myPlayerObj.isAlive === true) {
 
-    ctx.save();
-    ctx.translate(canvas.width / 2, canvas.height / 2);
-    ctx.rotate(getRadian(rotationDegree));
-    if (direction === 'left') {
-        ctx.scale(-1, 1);
-    }
-    ctx.drawImage(gameObj.submarineImage, -(gameObj.submarineImage.width / 2), -(gameObj.submarineImage.height / 2));
-    ctx.restore();
+        var rotationDegree = rotationDegreeByDirection[myPlayerObj.direction];
+
+        ctx.save();
+        ctx.translate(canvas.width / 2, canvas.height / 2);
+        ctx.rotate(getRadian(rotationDegree));
+        if (myPlayerObj.direction === 'left') {
+            ctx.scale(-1, 1);
+        }
+        ctx.drawImage(gameObj.submarineImage, -(gameObj.submarineImage.width / 2), -(gameObj.submarineImage.height / 2));
+        ctx.restore();
+    } else if (myPlayerObj.deadCount < 20) {
+
+        var drawBomNumber = Math.floor(myPlayerObj.deadCount / 2);
+        var cellPx = 32;
+        var cropX = drawBomNumber % (gameObj.bomListImage.width / cellPx) * cellPx;
+        var cropY = Math.floor(drawBomNumber / (gameObj.bomListImage.width / cellPx)) * cellPx;
+        console.log(drawBomNumber + ', cropX = ' + cropX + ', cropY = ' + cropY);
+
+        ctx.drawImage(gameObj.bomListImage, cropX, cropY, cellPx, cellPx, canvas.width / 2 - cellPx / 2, canvas.height / 2 - cellPx / 2, cellPx, cellPx); // 画像データ、切り抜き左、切り抜き上、幅、幅、表示x、表示y、幅、幅
+    } else {
+            // 何も描かない
+        }
 }
 
 function sendChangeDirection(socket, direction) {
@@ -3923,7 +3944,7 @@ socket.on('map data', function (mapData) {
 });
 
 (0, _jquery2.default)(window).keydown(function (event) {
-    if (!gameObj.myPlayerObj) return;
+    if (!gameObj.myPlayerObj || gameObj.myPlayerObj.isAlive === false) return;
 
     switch (event.key) {
         case 'ArrowLeft':

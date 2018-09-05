@@ -14,6 +14,10 @@ function createWebSocketServer(io, game) {
         socket.on('missile emit', (direction) => {
             game.missileEmit(socket.id, direction);
         });
+
+        socket.on('disconnect', () => {
+            game.disconnect(socket.id);
+        });
     });
 
     const socketTicker = setInterval(() => {

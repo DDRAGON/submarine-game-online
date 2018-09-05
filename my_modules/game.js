@@ -6,10 +6,10 @@ const gameObj = {
     missileAliveFlame: 180,
     missileSpeed: 3,
     missileWidth: 30,
-    missileHeight: 30
+    missileHeight: 30,
+    fieldWidth: 10000,
+    fieldHeight: 10000
 };
-const fieldWidth = 10000;
-const fieldHeight = 10000;
 
 init(); // 初期化（初期化はサーバー起動時に行う）
 
@@ -29,7 +29,17 @@ const gameTicker = setInterval(() => {
 }, 33);
 
 function movePlayers(playersMap) { // 潜水艦の移動
+    //const copyOfPlayersMap = new Map(playersMap); // 連想配列Mapの実態コピー
+
     for (let [key, value] of playersMap) {
+
+        if (value.isAlive === false) {
+            if (value.deadCount < 20) {
+                value.deadCount += 1;
+            }
+            continue;
+        }
+
         switch (value.direction) {
             case 'left':
                 value.x -= 1;
@@ -44,16 +54,16 @@ function movePlayers(playersMap) { // 潜水艦の移動
                 value.x += 1;
                 break;
         }
-        if (value.x > 10000) value.x -= 10000;
-        if (value.x < 0) value.x += 10000;
-        if (value.y < 0) value.y += 10000;
-        if (value.y > 10000) value.y -= 10000;
+        if (value.x > gameObj.fieldWidth) value.x -= gameObj.fieldWidth;
+        if (value.x < 0) value.x += gameObj.fieldWidth;
+        if (value.y < 0) value.y += gameObj.fieldHeight;
+        if (value.y > gameObj.fieldHeight) value.y -= gameObj.fieldHeight;
 
         value.aliveTime.clock += 1;
         if (value.aliveTime.clock === 30) {
             value.aliveTime.clock = 0;
             value.aliveTime.seconds += 1;
-            decleaseAir(value);
+            decreaseAir(value);
         }
     }
 }
@@ -86,10 +96,11 @@ function moveMissile(flyingMissiles) { // ミサイルの移動
     }
 }
 
-function decleaseAir(playerObj) {
+function decreaseAir(playerObj) {
     playerObj.airTime -= 1;
-    if (playerObj.airTime < 0) {
+    if (playerObj.airTime === 0) {
         playerObj.isAlive = false;
+        return;
     }
 }
 
@@ -166,15 +177,16 @@ function getMapData() {
 }
 
 function newConnection(socketId) {
-    const playerX = Math.floor(Math.random() * fieldWidth);
-    const playerY = Math.floor(Math.random() * fieldHeight);
+    const playerX = Math.floor(Math.random() * gameObj.fieldWidth);
+    const playerY = Math.floor(Math.random() * gameObj.fieldHeight);
     const playerObj = {
         x: playerX,
         y: playerY,
         isAlive: true,
+        deadCount: 0,
         direction: 'right',
         missilesMany: 0,
-        airTime: 99,
+        airTime: 3,
         aliveTime: {'clock': 0, 'seconds': 0},
         socketId: socketId
     };
@@ -204,6 +216,10 @@ function missileEmit(socketId, direction) {
     gameObj.flyingMissiles.push(missileObj);
 }
 
+function disconnect(socketId) {
+    gameObj.playersMap.delete(socketId);
+}
+
 function gotItem(socketId, itemKey) {
     gameObj.itemsMap.delete(itemKey); // アイテム消去
     addItem();
@@ -214,8 +230,8 @@ function gotItem(socketId, itemKey) {
 }
 
 function addItem() {
-    const itemX = Math.floor(Math.random() * fieldWidth);
-    const itemY = Math.floor(Math.random() * fieldHeight);
+    const itemX = Math.floor(Math.random() * gameObj.fieldWidth);
+    const itemY = Math.floor(Math.random() * gameObj.fieldHeight);
     const itemKey = `${itemX},${itemY}`;
 
     if (gameObj.itemsMap.has(itemKey)) { // アイテムの位置が被ってしまった場合は
@@ -231,8 +247,8 @@ function addItem() {
 }
 
 function addAir() {
-    const airX = Math.floor(Math.random() * fieldWidth);
-    const airY = Math.floor(Math.random() * fieldHeight);
+    const airX = Math.floor(Math.random() * gameObj.fieldWidth);
+    const airY = Math.floor(Math.random() * gameObj.fieldHeight);
     const airKey = `${airX},${airY}`;
 
     if (gameObj.airMap.has(airKey)) { // アイテムの位置が被ってしまった場合は
@@ -255,5 +271,6 @@ module.exports = {
     getMapData,
     updatePlayerDirection,
     gotItem,
-    missileEmit
+    missileEmit,
+    disconnect
 };
