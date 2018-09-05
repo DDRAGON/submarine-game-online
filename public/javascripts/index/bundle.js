@@ -3817,7 +3817,7 @@ function drawMap(ctx, playersMap, itemsMap, airMap, myPlayerObj, flyingMissiles)
         for (var _iterator4 = flyingMissiles[Symbol.iterator](), _step4; !(_iteratorNormalCompletion4 = (_step4 = _iterator4.next()).done); _iteratorNormalCompletion4 = true) {
             var flyingMissile = _step4.value;
 
-            if (Math.abs(myPlayerObj.x - flyingMissile.x) <= canvas.width / 2 && Math.abs(myPlayerObj.y - flyingMissile.y) <= canvas.height / 2) {
+            if (Math.abs(myPlayerObj.x - flyingMissile.x) <= canvas.width / 2 + 50 && Math.abs(myPlayerObj.y - flyingMissile.y) <= canvas.height / 2 + 50) {
                 var flyingMissileDrawX = flyingMissile.x - myPlayerObj.x + canvas.width / 2;
                 var flyingMissileDrawY = flyingMissile.y - myPlayerObj.y + canvas.height / 2;
                 var rotationDegree = rotationDegreeByFlyingMissileDirection[flyingMissile.direction];
@@ -3887,7 +3887,6 @@ function drawSubmarine(ctx, myPlayerObj) {
         var cellPx = 32;
         var cropX = drawBomNumber % (gameObj.bomListImage.width / cellPx) * cellPx;
         var cropY = Math.floor(drawBomNumber / (gameObj.bomListImage.width / cellPx)) * cellPx;
-        console.log(drawBomNumber + ', cropX = ' + cropX + ', cropY = ' + cropY);
 
         ctx.drawImage(gameObj.bomListImage, cropX, cropY, cellPx, cellPx, canvas.width / 2 - cellPx / 2, canvas.height / 2 - cellPx / 2, cellPx, cellPx); // 画像データ、切り抜き左、切り抜き上、幅、幅、表示x、表示y、幅、幅
     } else {

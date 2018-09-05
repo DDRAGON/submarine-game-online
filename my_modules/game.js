@@ -29,8 +29,6 @@ const gameTicker = setInterval(() => {
 }, 33);
 
 function movePlayers(playersMap) { // 潜水艦の移動
-    //const copyOfPlayersMap = new Map(playersMap); // 連想配列Mapの実態コピー
-
     for (let [key, value] of playersMap) {
 
         if (value.isAlive === false) {
@@ -147,7 +145,8 @@ function checkGetItem(playersMap, itemsMap, airMap, flyingMissiles) {
 
             if (
                 Math.abs(playerObj.x - missile.x) <= (submarineImageWidth/2 + gameObj.missileWidth/2) &&
-                Math.abs(playerObj.y - missile.y) <= (submarineImageWidth/2 + gameObj.missileHeight/2)
+                Math.abs(playerObj.y - missile.y) <= (submarineImageWidth/2 + gameObj.missileHeight/2) &&
+                playerObj.socketId !== missile.emitPlayerId
             ) {
                 playerObj.isAlive = false;
                 flyingMissiles.splice(i, 0);
@@ -186,7 +185,7 @@ function newConnection(socketId) {
         deadCount: 0,
         direction: 'right',
         missilesMany: 0,
-        airTime: 3,
+        airTime: 99,
         aliveTime: {'clock': 0, 'seconds': 0},
         socketId: socketId
     };

@@ -140,8 +140,8 @@ function drawMap(ctx, playersMap, itemsMap, airMap, myPlayerObj, flyingMissiles)
     // 飛んでいるミサイルの描画
     for (let flyingMissile of flyingMissiles) {
         if (
-            Math.abs(myPlayerObj.x - flyingMissile.x) <= (canvas.width / 2) &&
-            Math.abs(myPlayerObj.y - flyingMissile.y) <= (canvas.height / 2)
+            Math.abs(myPlayerObj.x - flyingMissile.x) <= (canvas.width / 2 + 50) &&
+            Math.abs(myPlayerObj.y - flyingMissile.y) <= (canvas.height / 2 + 50)
         ) {
             const flyingMissileDrawX = flyingMissile.x - myPlayerObj.x + canvas.width / 2;
             const flyingMissileDrawY = flyingMissile.y - myPlayerObj.y + canvas.height / 2;
