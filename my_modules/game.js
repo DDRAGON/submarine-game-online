@@ -7,17 +7,19 @@ const gameObj = {
     missileSpeed: 3,
     missileWidth: 30,
     missileHeight: 30,
-    fieldWidth: 10000,
-    fieldHeight: 10000
+    fieldWidth: 500,
+    fieldHeight: 500,
+    itemTotal: 20,
+    airTotal:30
 };
 
 init(); // 初期化（初期化はサーバー起動時に行う）
 
 function init() {
-    for (let i = 0; i < 400; i++) {
+    for (let i = 0; i < gameObj.itemTotal; i++) {
         addItem();
     }
-    for (let a = 0; a < 600; a++) {
+    for (let a = 0; a < gameObj.airTotal; a++) {
         addAir();
     }
 }
@@ -190,7 +192,13 @@ function newConnection(socketId) {
         socketId: socketId
     };
     gameObj.playersMap.set(socketId, playerObj);
-    return playerObj;
+
+    const startObj = {
+        playerObj: playerObj,
+        fieldWidth: gameObj.fieldWidth,
+        fieldHeight: gameObj.fieldHeight,
+    };
+    return startObj;
 }
 
 function updatePlayerDirection(socketId, direction) {

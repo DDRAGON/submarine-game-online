@@ -18,7 +18,9 @@ const gameObj = {
     airMap: new Map(),
     itemRadius: 4,
     airRadius: 6,
-    missileTimeFlame: 3
+    missileTimeFlame: 3,
+    fieldWidth: null,
+    fieldHeight: null
 };
 
 init();
@@ -92,31 +94,31 @@ const rotationDegreeByFlyingMissileDirection = {
 function drawMap(ctx, playersMap, itemsMap, airMap, myPlayerObj, flyingMissiles) {
 
     // アイテムの描画
-    ctx.fillStyle = "rgb(255, 0, 0)";
     for (const item of itemsMap.values()) {
-        if (
-            Math.abs(myPlayerObj.x - item.x) <= (canvas.width / 2) &&
-            Math.abs(myPlayerObj.y - item.y) <= (canvas.height / 2)
-        ) {
-            const itemDrawX = item.x - myPlayerObj.x + canvas.width / 2;
-            const itemDrawY = item.y - myPlayerObj.y + canvas.height / 2;
+
+        const distanceObj = calculationBetweenTwoPoints(
+            myPlayerObj.x, myPlayerObj.y, item.x, item.y, gameObj.fieldWidth, gameObj.fieldHeight, canvas.width, canvas.height
+        );
+
+        if (distanceObj.distanceX <= (canvas.width / 2) && distanceObj.distanceY <= (canvas.height / 2)) {
+            ctx.fillStyle = "rgb(255, 0, 0)";
             ctx.beginPath();
-            ctx.arc(itemDrawX, itemDrawY, gameObj.itemRadius, 0, Math.PI*2, true);
+            ctx.arc(distanceObj.drawX, distanceObj.drawY, gameObj.itemRadius, 0, Math.PI*2, true);
             ctx.fill();
         }
     }
 
     // 空気の描画
-    ctx.fillStyle = "rgb(0, 220, 255)";
     for (const [airKey, airObj] of airMap) {
-        if (
-            Math.abs(myPlayerObj.x - airObj.x) <= (canvas.width / 2) &&
-            Math.abs(myPlayerObj.y - airObj.y) <= (canvas.height / 2)
-        ) {
-            const airDrawX = airObj.x - myPlayerObj.x + canvas.width / 2;
-            const airDrawY = airObj.y - myPlayerObj.y + canvas.height / 2;
+
+        const distanceObj = calculationBetweenTwoPoints(
+            myPlayerObj.x, myPlayerObj.y, airObj.x, airObj.y, gameObj.fieldWidth, gameObj.fieldHeight, canvas.width, canvas.height
+        );
+
+        if (distanceObj.distanceX <= (canvas.width / 2) && distanceObj.distanceY <= (canvas.height / 2)) {
+            ctx.fillStyle = "rgb(0, 220, 255)";
             ctx.beginPath();
-            ctx.arc(airDrawX, airDrawY, gameObj.airRadius, 0, Math.PI*2, true);
+            ctx.arc(distanceObj.drawX, distanceObj.drawY, gameObj.airRadius, 0, Math.PI*2, true);
             ctx.fill();
         }
     }
@@ -125,29 +127,31 @@ function drawMap(ctx, playersMap, itemsMap, airMap, myPlayerObj, flyingMissiles)
     for (let [key, tekiPlayerObj] of playersMap) {
         if (key === myPlayerObj.socketId) { continue; } // 自分は描画しない
 
-        if (
-            Math.abs(myPlayerObj.x - tekiPlayerObj.x) <= (canvas.width / 2) &&
-            Math.abs(myPlayerObj.y - tekiPlayerObj.y) <= (canvas.height / 2)
-        ) {
-            const itemDrawX = tekiPlayerObj.x - myPlayerObj.x + canvas.width / 2;
-            const itemDrawY = tekiPlayerObj.y - myPlayerObj.y + canvas.height / 2;
+        const distanceObj = calculationBetweenTwoPoints(
+            myPlayerObj.x, myPlayerObj.y, tekiPlayerObj.x, tekiPlayerObj.y, gameObj.fieldWidth, gameObj.fieldHeight, canvas.width, canvas.height
+        );
+
+        if (distanceObj.distanceX <= (canvas.width / 2) && distanceObj.distanceY <= (canvas.height / 2)) {
             ctx.beginPath();
-            ctx.arc(itemDrawX, itemDrawY, gameObj.itemRadius, 0, Math.PI*2, true);
+            ctx.arc(distanceObj.drawX, distanceObj.drawY, gameObj.itemRadius, 0, Math.PI*2, true);
             ctx.fill();
         }
     }
 
     // 飛んでいるミサイルの描画
     for (let flyingMissile of flyingMissiles) {
+
+        const distanceObj = calculationBetweenTwoPoints(
+            myPlayerObj.x, myPlayerObj.y, flyingMissile.x, flyingMissile.y, gameObj.fieldWidth, gameObj.fieldHeight, canvas.width, canvas.height
+        );
+
         if (
-            Math.abs(myPlayerObj.x - flyingMissile.x) <= (canvas.width / 2 + 50) &&
-            Math.abs(myPlayerObj.y - flyingMissile.y) <= (canvas.height / 2 + 50)
+            distanceObj.distanceX <= (canvas.width / 2 + 50) &&
+            distanceObj.distanceY <= (canvas.height / 2 + 50)
         ) {
-            const flyingMissileDrawX = flyingMissile.x - myPlayerObj.x + canvas.width / 2;
-            const flyingMissileDrawY = flyingMissile.y - myPlayerObj.y + canvas.height / 2;
             const rotationDegree = rotationDegreeByFlyingMissileDirection[flyingMissile.direction];
             ctx.save();
-            ctx.translate(flyingMissileDrawX, flyingMissileDrawY);
+            ctx.translate(distanceObj.drawX, distanceObj.drawY);
             ctx.rotate(getRadian(rotationDegree));
             ctx.drawImage(
                 gameObj.missileImage,
@@ -159,25 +163,64 @@ function drawMap(ctx, playersMap, itemsMap, airMap, myPlayerObj, flyingMissiles)
     }
 }
 
-function move() {
-    switch(gameObj.myPlayerObj.direction) {
-        case 'left':
-            gameObj.myPlayerObj.x -= 1;
-            break;
-        case 'up':
-            gameObj.myPlayerObj.y -= 1;
-            break;
-        case 'down':
-            gameObj.myPlayerObj.y += 1;
-            break;
-        case 'right':
-            gameObj.myPlayerObj.x += 1;
-            break;
+function calculationBetweenTwoPoints(pX, pY, oX, oY, gameWidth, gameHeight, canvasWidth, canvasHeight) {
+    let distanceX = 99999999;
+    let distanceY = 99999999;
+    let drawX = null;
+    let drawY = null;
+
+    if (pX <= oX) {
+        //　右から
+        distanceX = oX - pX;
+        drawX = (canvasWidth / 2) + distanceX;
+        // 左から
+        let tmpDistance = pX + gameWidth - oX;
+        if (distanceX > tmpDistance) {
+            distanceX = tmpDistance;
+            drawX = (canvasWidth / 2) - distanceX;
+        }
+
+    } else {
+        //　右から
+        distanceX = pX - oX;
+        drawX = (canvasWidth / 2) - distanceX;
+        // 左から
+        let tmpDistance = oX + gameWidth - pX;
+        if (distanceX > tmpDistance) {
+            distanceX = tmpDistance;
+            drawX = (canvasWidth / 2) + distanceX;
+        }
     }
-    if (gameObj.myPlayerObj.x > 10000) gameObj.myPlayerObj.x -= 10000;
-    if (gameObj.myPlayerObj.x < 0) gameObj.myPlayerObj.x += 10000;
-    if (gameObj.myPlayerObj.y < 0) gameObj.myPlayerObj.y += 10000;
-    if (gameObj.myPlayerObj.y > 10000) gameObj.myPlayerObj.y -= 10000;
+
+    if (pY <= oY) {
+        // 下から
+        distanceY = oY - pY;
+        drawY = (canvasHeight / 2) + distanceY;
+        // 上から
+        let tmpDistance = pY + gameHeight - oY;
+        if (distanceY > tmpDistance) {
+            distanceY = tmpDistance;
+            drawY = (canvasHeight / 2) - distanceY;
+        }
+
+    } else {
+        //　上から
+        distanceY = pY - oY;
+        drawY = (canvasHeight / 2) - distanceY;
+        // 下から
+        let tmpDistance = oY + gameHeight - pY;
+        if (distanceY > tmpDistance) {
+            distanceY = tmpDistance;
+            drawY = (canvasHeight / 2) + distanceY;
+        }
+    }
+
+    return {
+        distanceX,
+        distanceY,
+        drawX,
+        drawY
+    }
 }
 
 const rotationDegreeByDirection = {
@@ -256,8 +299,10 @@ function drawAirTimer(ctx2, airTime) {
    ctx2.fillText(airTime, 110, 50);
 }
 
-socket.on('start data', (myPlayerObj) => {
-    gameObj.myPlayerObj = myPlayerObj;
+socket.on('start data', (startObj) => {
+    gameObj.myPlayerObj  = startObj.playerObj;
+    gameObj.fieldWidth   = startObj.fieldWidth;
+    gameObj.fieldHeight  = startObj.fieldHeight;
 });
 
 socket.on('map data', (mapData) => {

@@ -2,9 +2,9 @@ function createWebSocketServer(io, game) {
 
     const rootIo = io.of('/');
     rootIo.on('connection', function (socket) {
-        const playerObj = game.newConnection(socket.id);
+        const startObj = game.newConnection(socket.id);
 
-        socket.emit('start data', playerObj);
+        socket.emit('start data', startObj);
 
 
         socket.on('change direction', (direction) => {
