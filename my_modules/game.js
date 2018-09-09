@@ -34,8 +34,10 @@ function movePlayers(playersMap) { // 潜水艦の移動
     for (let [key, value] of playersMap) {
 
         if (value.isAlive === false) {
-            if (value.deadCount < 20) {
+            if (value.deadCount < 60) {
                 value.deadCount += 1;
+            } else {
+               gameObj.playersMap.delete(key);
             }
             continue;
         }
@@ -113,9 +115,14 @@ function checkGetItem(playersMap, itemsMap, airMap, flyingMissiles) {
 
         // アイテムのミサイル（赤丸）
         for (let [itemKey, itemObj] of itemsMap) {
+
+            const distanceObj = calculationBetweenTwoPoints(
+               playerObj.x, playerObj.y, itemObj.x, itemObj.y, gameObj.fieldWidth, gameObj.fieldHeight
+            );
+
             if (
-                Math.abs(playerObj.x - itemObj.x) <= (submarineImageWidth/2 + itemRadius) &&
-                Math.abs(playerObj.y - itemObj.y) <= (submarineImageWidth/2 + itemRadius)
+                distanceObj.distanceX <= (submarineImageWidth/2 + itemRadius) &&
+                distanceObj.distanceY <= (submarineImageWidth/2 + itemRadius)
             ) { // got item!
 
                 gameObj.itemsMap.delete(itemKey);
@@ -124,11 +131,17 @@ function checkGetItem(playersMap, itemsMap, airMap, flyingMissiles) {
             }
         }
 
+
         // アイテムの空気（青丸）
         for (let [airKey, airObj] of airMap) {
+
+            const distanceObj = calculationBetweenTwoPoints(
+               playerObj.x, playerObj.y, airObj.x, airObj.y, gameObj.fieldWidth, gameObj.fieldHeight
+            );
+
             if (
-                Math.abs(playerObj.x - airObj.x) <= (submarineImageWidth/2 + airRadius) &&
-                Math.abs(playerObj.y - airObj.y) <= (submarineImageWidth/2 + airRadius)
+                distanceObj.distanceX <= (submarineImageWidth/2 + airRadius) &&
+                distanceObj.distanceY <= (submarineImageWidth/2 + airRadius)
             ) { // got air!
 
                 gameObj.airMap.delete(airKey);
@@ -145,9 +158,13 @@ function checkGetItem(playersMap, itemsMap, airMap, flyingMissiles) {
         for (let i = flyingMissiles.length - 1; i >= 0  ; i--) {
             const missile = flyingMissiles[i];
 
+            const distanceObj = calculationBetweenTwoPoints(
+               playerObj.x, playerObj.y, missile.x, missile.y, gameObj.fieldWidth, gameObj.fieldHeight
+            );
+
             if (
-                Math.abs(playerObj.x - missile.x) <= (submarineImageWidth/2 + gameObj.missileWidth/2) &&
-                Math.abs(playerObj.y - missile.y) <= (submarineImageWidth/2 + gameObj.missileHeight/2) &&
+                distanceObj.distanceX <= (submarineImageWidth/2 + gameObj.missileWidth/2) &&
+                distanceObj.distanceY <= (submarineImageWidth/2 + gameObj.missileHeight/2) &&
                 playerObj.socketId !== missile.emitPlayerId
             ) {
                 playerObj.isAlive = false;
@@ -268,6 +285,54 @@ function addAir() {
         isAlive: true
     };
     gameObj.airMap.set(airKey, airObj);
+}
+
+function calculationBetweenTwoPoints(pX, pY, oX, oY, gameWidth, gameHeight) {
+   let distanceX = 99999999;
+   let distanceY = 99999999;
+
+   if (pX <= oX) {
+      // 右から
+      distanceX = oX - pX;
+      // 左から
+      let tmpDistance = pX + gameWidth - oX;
+      if (distanceX > tmpDistance) {
+         distanceX = tmpDistance;
+      }
+
+   } else {
+      // 右から
+      distanceX = pX - oX;
+      // 左から
+      let tmpDistance = oX + gameWidth - pX;
+      if (distanceX > tmpDistance) {
+         distanceX = tmpDistance;
+      }
+   }
+
+   if (pY <= oY) {
+      // 下から
+      distanceY = oY - pY;
+      // 上から
+      let tmpDistance = pY + gameHeight - oY;
+      if (distanceY > tmpDistance) {
+         distanceY = tmpDistance;
+      }
+
+   } else {
+      // 上から
+      distanceY = pY - oY;
+      // 下から
+      let tmpDistance = oY + gameHeight - pY;
+      if (distanceY > tmpDistance) {
+         distanceY = tmpDistance;
+      }
+   }
+
+   return {
+      distanceX,
+      distanceY
+   };
 }
 
 

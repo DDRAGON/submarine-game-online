@@ -3619,10 +3619,12 @@ var gameObj = {
     itemsMap: new Map(),
     airMap: new Map(),
     itemRadius: 4,
-    airRadius: 6,
+    airRadius: 5,
     missileTimeFlame: 3,
     fieldWidth: null,
-    fieldHeight: null
+    fieldHeight: null,
+    bomCellPx: 32,
+    counter: 0
 };
 
 init();
@@ -3644,10 +3646,13 @@ function init() {
 }
 
 var deg = 0;
-var counter = 0;
 
 function ticker() {
     if (!gameObj.myPlayerObj) return;
+    if (gameObj.myPlayerObj.isAlive === false && gameObj.myPlayerObj.deadCount > 20) {
+        drawGameOver();
+        return;
+    }
 
     ctx.clearRect(0, 0, canvas.width, canvas.height); // まっさら
     drawRadar();
@@ -3656,9 +3661,18 @@ function ticker() {
     drawAirTimer(ctx2, gameObj.myPlayerObj.airTime);
     drawMissiles(ctx2, gameObj.myPlayerObj.missilesMany);
     gameObj.missileTimeFlame -= 1;
-    counter = (counter + 1) % 10000;
+    gameObj.counter = (gameObj.counter + 1) % 10000;
 }
 setInterval(ticker, 33);
+
+function drawGameOver() {
+    ctx.font = 'bold 76px arial black';
+    ctx.fillStyle = "rgb(0, 220, 250)";
+    ctx.fillText('Game Over', 20, 270);
+    ctx.fillStyle = "rgb(0, 0, 0)";
+    ctx.lineWidth = 3;
+    ctx.strokeText('Game Over', 20, 270);
+}
 
 var x = canvas.width / 2;
 var y = canvas.height / 2;
@@ -3695,27 +3709,62 @@ var rotationDegreeByFlyingMissileDirection = {
 };
 function drawMap(ctx, playersMap, itemsMap, airMap, myPlayerObj, flyingMissiles) {
 
-    // アイテムの描画
+    // 敵プレイヤーの描画
     var _iteratorNormalCompletion = true;
     var _didIteratorError = false;
     var _iteratorError = undefined;
 
     try {
-        for (var _iterator = itemsMap.values()[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
-            var item = _step.value;
+        for (var _iterator = playersMap[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+            var _ref = _step.value;
 
+            var _ref2 = _slicedToArray(_ref, 2);
 
-            var distanceObj = calculationBetweenTwoPoints(myPlayerObj.x, myPlayerObj.y, item.x, item.y, gameObj.fieldWidth, gameObj.fieldHeight, canvas.width, canvas.height);
+            var key = _ref2[0];
+            var tekiPlayerObj = _ref2[1];
+
+            if (key === myPlayerObj.socketId) {
+                continue;
+            } // 自分は描画しない
+
+            var distanceObj = calculationBetweenTwoPoints(myPlayerObj.x, myPlayerObj.y, tekiPlayerObj.x, tekiPlayerObj.y, gameObj.fieldWidth, gameObj.fieldHeight, canvas.width, canvas.height);
 
             if (distanceObj.distanceX <= canvas.width / 2 && distanceObj.distanceY <= canvas.height / 2) {
-                ctx.fillStyle = "rgb(255, 0, 0)";
-                ctx.beginPath();
-                ctx.arc(distanceObj.drawX, distanceObj.drawY, gameObj.itemRadius, 0, Math.PI * 2, true);
-                ctx.fill();
+
+                if (tekiPlayerObj.isAlive === true) {
+
+                    var drawRadius = gameObj.counter % 12 + 2 + 12;
+                    var clearRadius = drawRadius - 2;
+                    var drawRadius2 = gameObj.counter % 12 + 2;
+                    var clearRadius2 = drawRadius2 - 2;
+
+                    ctx.fillStyle = "rgb(255, 0, 0)";
+                    ctx.beginPath();
+                    ctx.arc(distanceObj.drawX, distanceObj.drawY, drawRadius, 0, Math.PI * 2, true);
+                    ctx.fill();
+
+                    ctx.fillStyle = "rgb(0, 20, 50)";
+                    ctx.beginPath();
+                    ctx.arc(distanceObj.drawX, distanceObj.drawY, clearRadius, 0, Math.PI * 2, true);
+                    ctx.fill();
+
+                    ctx.fillStyle = "rgb(255, 0, 0)";
+                    ctx.beginPath();
+                    ctx.arc(distanceObj.drawX, distanceObj.drawY, drawRadius2, 0, Math.PI * 2, true);
+                    ctx.fill();
+
+                    ctx.fillStyle = "rgb(0, 20, 50)";
+                    ctx.beginPath();
+                    ctx.arc(distanceObj.drawX, distanceObj.drawY, clearRadius2, 0, Math.PI * 2, true);
+                    ctx.fill();
+                } else if (tekiPlayerObj.isAlive === false) {
+
+                    drawBom(distanceObj.drawX, distanceObj.drawY, tekiPlayerObj.deadCount);
+                }
             }
         }
 
-        // 空気の描画
+        // 飛んでいるミサイルの描画
     } catch (err) {
         _didIteratorError = true;
         _iteratorError = err;
@@ -3736,26 +3785,66 @@ function drawMap(ctx, playersMap, itemsMap, airMap, myPlayerObj, flyingMissiles)
     var _iteratorError2 = undefined;
 
     try {
-        for (var _iterator2 = airMap[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
-            var _ref = _step2.value;
-
-            var _ref2 = _slicedToArray(_ref, 2);
-
-            var airKey = _ref2[0];
-            var airObj = _ref2[1];
+        for (var _iterator2 = flyingMissiles[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
+            var flyingMissile = _step2.value;
 
 
-            var distanceObj = calculationBetweenTwoPoints(myPlayerObj.x, myPlayerObj.y, airObj.x, airObj.y, gameObj.fieldWidth, gameObj.fieldHeight, canvas.width, canvas.height);
+            var distanceObj = calculationBetweenTwoPoints(myPlayerObj.x, myPlayerObj.y, flyingMissile.x, flyingMissile.y, gameObj.fieldWidth, gameObj.fieldHeight, canvas.width, canvas.height);
 
-            if (distanceObj.distanceX <= canvas.width / 2 && distanceObj.distanceY <= canvas.height / 2) {
-                ctx.fillStyle = "rgb(0, 220, 255)";
-                ctx.beginPath();
-                ctx.arc(distanceObj.drawX, distanceObj.drawY, gameObj.airRadius, 0, Math.PI * 2, true);
-                ctx.fill();
+            if (distanceObj.distanceX <= canvas.width / 2 + 50 && distanceObj.distanceY <= canvas.height / 2 + 50) {
+
+                if (flyingMissile.emitPlayerId === myPlayerObj.socketId) {
+                    // 自分自身
+
+                    var rotationDegree = rotationDegreeByFlyingMissileDirection[flyingMissile.direction];
+                    ctx.save();
+                    ctx.translate(distanceObj.drawX, distanceObj.drawY);
+                    ctx.rotate(getRadian(rotationDegree));
+                    ctx.drawImage(gameObj.missileImage, -gameObj.missileImage.width / 2, -gameObj.missileImage.height / 2);
+                    ctx.restore();
+                } else {
+
+                    var drawRadius1 = gameObj.counter % 8 + 2 + 20;
+                    var clearRadius1 = drawRadius1 - 2;
+                    var _drawRadius = gameObj.counter % 8 + 2 + 10;
+                    var _clearRadius = _drawRadius - 2;
+                    var drawRadius3 = gameObj.counter % 8 + 2 + 0;
+                    var clearRadius3 = drawRadius3 - 2;
+
+                    ctx.fillStyle = "rgb(255, 0, 0)";
+                    ctx.beginPath();
+                    ctx.arc(distanceObj.drawX, distanceObj.drawY, drawRadius1, 0, Math.PI * 2, true);
+                    ctx.fill();
+
+                    ctx.fillStyle = "rgb(0, 20, 50)";
+                    ctx.beginPath();
+                    ctx.arc(distanceObj.drawX, distanceObj.drawY, clearRadius1, 0, Math.PI * 2, true);
+                    ctx.fill();
+
+                    ctx.fillStyle = "rgb(255, 0, 0)";
+                    ctx.beginPath();
+                    ctx.arc(distanceObj.drawX, distanceObj.drawY, _drawRadius, 0, Math.PI * 2, true);
+                    ctx.fill();
+
+                    ctx.fillStyle = "rgb(0, 20, 50)";
+                    ctx.beginPath();
+                    ctx.arc(distanceObj.drawX, distanceObj.drawY, _clearRadius, 0, Math.PI * 2, true);
+                    ctx.fill();
+
+                    ctx.fillStyle = "rgb(255, 0, 0)";
+                    ctx.beginPath();
+                    ctx.arc(distanceObj.drawX, distanceObj.drawY, drawRadius3, 0, Math.PI * 2, true);
+                    ctx.fill();
+
+                    ctx.fillStyle = "rgb(0, 20, 50)";
+                    ctx.beginPath();
+                    ctx.arc(distanceObj.drawX, distanceObj.drawY, clearRadius3, 0, Math.PI * 2, true);
+                    ctx.fill();
+                }
             }
         }
 
-        // 敵プレイヤーの描画
+        // アイテムの描画
     } catch (err) {
         _didIteratorError2 = true;
         _iteratorError2 = err;
@@ -3776,28 +3865,21 @@ function drawMap(ctx, playersMap, itemsMap, airMap, myPlayerObj, flyingMissiles)
     var _iteratorError3 = undefined;
 
     try {
-        for (var _iterator3 = playersMap[Symbol.iterator](), _step3; !(_iteratorNormalCompletion3 = (_step3 = _iterator3.next()).done); _iteratorNormalCompletion3 = true) {
-            var _ref3 = _step3.value;
+        for (var _iterator3 = itemsMap.values()[Symbol.iterator](), _step3; !(_iteratorNormalCompletion3 = (_step3 = _iterator3.next()).done); _iteratorNormalCompletion3 = true) {
+            var item = _step3.value;
 
-            var _ref4 = _slicedToArray(_ref3, 2);
 
-            var key = _ref4[0];
-            var tekiPlayerObj = _ref4[1];
-
-            if (key === myPlayerObj.socketId) {
-                continue;
-            } // 自分は描画しない
-
-            var distanceObj = calculationBetweenTwoPoints(myPlayerObj.x, myPlayerObj.y, tekiPlayerObj.x, tekiPlayerObj.y, gameObj.fieldWidth, gameObj.fieldHeight, canvas.width, canvas.height);
+            var distanceObj = calculationBetweenTwoPoints(myPlayerObj.x, myPlayerObj.y, item.x, item.y, gameObj.fieldWidth, gameObj.fieldHeight, canvas.width, canvas.height);
 
             if (distanceObj.distanceX <= canvas.width / 2 && distanceObj.distanceY <= canvas.height / 2) {
+                ctx.fillStyle = "rgb(255, 165, 0)";
                 ctx.beginPath();
                 ctx.arc(distanceObj.drawX, distanceObj.drawY, gameObj.itemRadius, 0, Math.PI * 2, true);
                 ctx.fill();
             }
         }
 
-        // 飛んでいるミサイルの描画
+        // 空気の描画
     } catch (err) {
         _didIteratorError3 = true;
         _iteratorError3 = err;
@@ -3818,19 +3900,22 @@ function drawMap(ctx, playersMap, itemsMap, airMap, myPlayerObj, flyingMissiles)
     var _iteratorError4 = undefined;
 
     try {
-        for (var _iterator4 = flyingMissiles[Symbol.iterator](), _step4; !(_iteratorNormalCompletion4 = (_step4 = _iterator4.next()).done); _iteratorNormalCompletion4 = true) {
-            var flyingMissile = _step4.value;
+        for (var _iterator4 = airMap[Symbol.iterator](), _step4; !(_iteratorNormalCompletion4 = (_step4 = _iterator4.next()).done); _iteratorNormalCompletion4 = true) {
+            var _ref3 = _step4.value;
+
+            var _ref4 = _slicedToArray(_ref3, 2);
+
+            var airKey = _ref4[0];
+            var airObj = _ref4[1];
 
 
-            var distanceObj = calculationBetweenTwoPoints(myPlayerObj.x, myPlayerObj.y, flyingMissile.x, flyingMissile.y, gameObj.fieldWidth, gameObj.fieldHeight, canvas.width, canvas.height);
+            var distanceObj = calculationBetweenTwoPoints(myPlayerObj.x, myPlayerObj.y, airObj.x, airObj.y, gameObj.fieldWidth, gameObj.fieldHeight, canvas.width, canvas.height);
 
-            if (distanceObj.distanceX <= canvas.width / 2 + 50 && distanceObj.distanceY <= canvas.height / 2 + 50) {
-                var rotationDegree = rotationDegreeByFlyingMissileDirection[flyingMissile.direction];
-                ctx.save();
-                ctx.translate(distanceObj.drawX, distanceObj.drawY);
-                ctx.rotate(getRadian(rotationDegree));
-                ctx.drawImage(gameObj.missileImage, -gameObj.missileImage.width / 2, -gameObj.missileImage.height / 2);
-                ctx.restore();
+            if (distanceObj.distanceX <= canvas.width / 2 && distanceObj.distanceY <= canvas.height / 2) {
+                ctx.fillStyle = "rgb(0, 220, 255)";
+                ctx.beginPath();
+                ctx.arc(distanceObj.drawX, distanceObj.drawY, gameObj.airRadius, 0, Math.PI * 2, true);
+                ctx.fill();
             }
         }
     } catch (err) {
@@ -3856,7 +3941,7 @@ function calculationBetweenTwoPoints(pX, pY, oX, oY, gameWidth, gameHeight, canv
     var drawY = null;
 
     if (pX <= oX) {
-        //　右から
+        // 右から
         distanceX = oX - pX;
         drawX = canvasWidth / 2 + distanceX;
         // 左から
@@ -3866,7 +3951,7 @@ function calculationBetweenTwoPoints(pX, pY, oX, oY, gameWidth, gameHeight, canv
             drawX = canvasWidth / 2 - distanceX;
         }
     } else {
-        //　右から
+        // 右から
         distanceX = pX - oX;
         drawX = canvasWidth / 2 - distanceX;
         // 左から
@@ -3888,7 +3973,7 @@ function calculationBetweenTwoPoints(pX, pY, oX, oY, gameWidth, gameHeight, canv
             drawY = canvasHeight / 2 - distanceY;
         }
     } else {
-        //　上から
+        // 上から
         distanceY = pY - oY;
         drawY = canvasHeight / 2 - distanceY;
         // 下から
@@ -3923,17 +4008,22 @@ function drawSubmarine(ctx, myPlayerObj) {
         }
         ctx.drawImage(gameObj.submarineImage, -(gameObj.submarineImage.width / 2), -(gameObj.submarineImage.height / 2));
         ctx.restore();
-    } else if (myPlayerObj.deadCount < 20) {
-
-        var drawBomNumber = Math.floor(myPlayerObj.deadCount / 2);
-        var cellPx = 32;
-        var cropX = drawBomNumber % (gameObj.bomListImage.width / cellPx) * cellPx;
-        var cropY = Math.floor(drawBomNumber / (gameObj.bomListImage.width / cellPx)) * cellPx;
-
-        ctx.drawImage(gameObj.bomListImage, cropX, cropY, cellPx, cellPx, canvas.width / 2 - cellPx / 2, canvas.height / 2 - cellPx / 2, cellPx, cellPx); // 画像データ、切り抜き左、切り抜き上、幅、幅、表示x、表示y、幅、幅
     } else {
-            // 何も描かない
-        }
+
+        var drawX = canvas.width / 2 - gameObj.bomCellPx / 2;
+        var drawY = canvas.height / 2 - gameObj.bomCellPx / 2;
+        drawBom(drawX, drawY, myPlayerObj.deadCount);
+    }
+}
+
+function drawBom(drawX, drawY, deadCount) {
+    if (deadCount >= 20) return;
+
+    var drawBomNumber = Math.floor(deadCount / 2);
+    var cropX = drawBomNumber % (gameObj.bomListImage.width / gameObj.bomCellPx) * gameObj.bomCellPx;
+    var cropY = Math.floor(drawBomNumber / (gameObj.bomListImage.width / gameObj.bomCellPx)) * gameObj.bomCellPx;
+
+    ctx.drawImage(gameObj.bomListImage, cropX, cropY, gameObj.bomCellPx, gameObj.bomCellPx, drawX, drawY, gameObj.bomCellPx, gameObj.bomCellPx); // 画像データ、切り抜き左、切り抜き上、幅、幅、表示x、表示y、幅、幅
 }
 
 function sendChangeDirection(socket, direction) {
