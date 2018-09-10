@@ -2,6 +2,7 @@ const gameObj = {
     playersMap: new Map(),
     itemsMap: new Map(),
     airMap: new Map(),
+    AIMap: new Map(),
     flyingMissiles: [],
     missileAliveFlame: 180,
     missileSpeed: 3,
@@ -9,6 +10,7 @@ const gameObj = {
     missileHeight: 30,
     fieldWidth: 500,
     fieldHeight: 500,
+    addingAiPlayerNum: 10,
     itemTotal: 20,
     airTotal:30,
     itemPoint: 3,
@@ -28,8 +30,11 @@ function init() {
 
 const gameTicker = setInterval(() => {
     movePlayers(gameObj.playersMap); // 潜水艦の移動
+    AIMoveDecision(gameObj.AIMap); // AI の行動選択
+    moveAIs(gameObj.AIMap); // AI の移動
     moveMissile(gameObj.flyingMissiles); // ミサイルの移動
     checkGetItem(gameObj.playersMap, gameObj.itemsMap, gameObj.airMap, gameObj.flyingMissiles);
+    addAIs();
 }, 33);
 
 function movePlayers(playersMap) { // 潜水艦の移動
@@ -69,6 +74,29 @@ function movePlayers(playersMap) { // 潜水艦の移動
             value.aliveTime.seconds += 1;
             decreaseAir(value);
             value.score += 1;
+        }
+    }
+}
+
+function moveAIs(AIMap) {
+
+}
+
+const directions = ['left', 'up', 'down', 'right'];
+function AIMoveDecision(AIMap) {
+    for (let [key, ai] of AIMap) {
+
+        switch(ai.level) {
+            case 1:
+                if (Math.floor(Math.random() * 60) === 1) {
+                    ai.direction = directions[Math.floor(Math.random() * directions.length)];
+                }
+                if (ai.missilesMany > 0 && Math.floor(Math.random() * 30) === 1) {
+                    missileEmit(ai.id, ai.direction);
+                }
+                break;
+            case 2:
+            case 3:
         }
     }
 }
@@ -136,7 +164,6 @@ function checkGetItem(playersMap, itemsMap, airMap, flyingMissiles) {
             }
         }
 
-
         // アイテムの空気（青丸）
         for (let [airKey, airObj] of airMap) {
 
@@ -178,11 +205,39 @@ function checkGetItem(playersMap, itemsMap, airMap, flyingMissiles) {
 
                 // 得点の更新
                 if (gameObj.playersMap.has(missile.emitPlayerId)) {
-                    const emitedPlayer = gameObj.playersMap.get(missile.emitPlayerId);
-                    emitedPlayer.score += gameObj.killPoint;
-                    gameObj.playersMap.set(missile.emitPlayerId, emitedPlayer);
+                    const emitPlayer = gameObj.playersMap.get(missile.emitPlayerId);
+                    emitPlayer.score += gameObj.killPoint;
+                    gameObj.playersMap.set(missile.emitPlayerId, emitPlayer);
                 }
             }
+        }
+    }
+}
+
+function addAIs() {
+    if (gameObj.playersMap.size + gameObj.AIMap.size < gameObj.addingAiPlayerNum) {
+        const addMany = gameObj.addingAiPlayerNum - gameObj.playersMap.size - gameObj.AIMap.size;
+
+        for (let i = 0; i < addMany; i++) {
+
+            const playerX = Math.floor(Math.random() * gameObj.fieldWidth);
+            const playerY = Math.floor(Math.random() * gameObj.fieldHeight);
+            const level   = Math.floor(Math.random() * 3) + 1;
+            const id = Math.floor(Math.random() * 100000) + ',' + playerX + ',' + playerY + ',' + level;
+            const playerObj = {
+                x: playerX,
+                y: playerY,
+                isAlive: true,
+                deadCount: 0,
+                direction: 'right',
+                missilesMany: 0,
+                airTime: 99,
+                aliveTime: {'clock': 0, 'seconds': 0},
+                score: 0,
+                level: level,
+                id : id
+            };
+            gameObj.AIMap.set(id, playerObj);
         }
     }
 }
@@ -227,16 +282,25 @@ function updatePlayerDirection(socketId, direction) {
     gameObj.playersMap.set(socketId, playerObj);
 }
 
-function missileEmit(socketId, direction) {
-    const playerObj = gameObj.playersMap.get(socketId);
-    if (playerObj.missilesMany <= 0) return; // 撃てないやん
+function missileEmit(id, direction) {
+    let targetObj = null;
 
-    playerObj.missilesMany -= 1;
+    if (gameObj.playersMap.has(id)) {
+        targetObj = gameObj.playersMap.get(id);
+    } else if (gameObj.AIMap.has(id)) {
+        targetObj = gameObj.AIMap.get(id);
+    } else {
+        return; // 無いやん
+    }
+
+    if (targetObj.missilesMany <= 0) return; // 撃てないやん
+
+    targetObj.missilesMany -= 1;
 
     const missileObj = {
         emitPlayerId: socketId,
-        x: playerObj.x,
-        y: playerObj.y,
+        x: targetObj.x,
+        y: targetObj.y,
         aliveFlame: gameObj.missileAliveFlame,
         direction: direction
     };
