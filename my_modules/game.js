@@ -10,7 +10,9 @@ const gameObj = {
     fieldWidth: 500,
     fieldHeight: 500,
     itemTotal: 20,
-    airTotal:30
+    airTotal:30,
+    itemPoint: 3,
+    killPoint: 500
 };
 
 init(); // 初期化（初期化はサーバー起動時に行う）
@@ -66,6 +68,7 @@ function movePlayers(playersMap) { // 潜水艦の移動
             value.aliveTime.clock = 0;
             value.aliveTime.seconds += 1;
             decreaseAir(value);
+            value.score += 1;
         }
     }
 }
@@ -112,6 +115,7 @@ const airRadius = 6;
 const addAirTime = 30;
 function checkGetItem(playersMap, itemsMap, airMap, flyingMissiles) {
     for (let [socketId, playerObj] of playersMap) {
+        if (playerObj.isAlive === false) { return; }
 
         // アイテムのミサイル（赤丸）
         for (let [itemKey, itemObj] of itemsMap) {
@@ -127,6 +131,7 @@ function checkGetItem(playersMap, itemsMap, airMap, flyingMissiles) {
 
                 gameObj.itemsMap.delete(itemKey);
                 playerObj.missilesMany = playerObj.missilesMany > 5 ? 6 : playerObj.missilesMany + 1;
+                playerObj.score += gameObj.itemPoint;
                 addItem();
             }
         }
@@ -150,6 +155,7 @@ function checkGetItem(playersMap, itemsMap, airMap, flyingMissiles) {
                 } else {
                     playerObj.airTime += addAirTime;
                 }
+                playerObj.score += gameObj.itemPoint;
                 addAir();
             }
         }
@@ -169,20 +175,16 @@ function checkGetItem(playersMap, itemsMap, airMap, flyingMissiles) {
             ) {
                 playerObj.isAlive = false;
                 flyingMissiles.splice(i, 0);
+
+                // 得点の更新
+                if (gameObj.playersMap.has(missile.emitPlayerId)) {
+                    const emitedPlayer = gameObj.playersMap.get(missile.emitPlayerId);
+                    emitedPlayer.score += gameObj.killPoint;
+                    gameObj.playersMap.set(missile.emitPlayerId, emitedPlayer);
+                }
             }
         }
     }
-}
-
-
-
-
-function getPlayers() {
-    return Array.from(gameObj.playersMap);
-}
-
-function getItems() {
-    return Array.from(gameObj.itemsMap);
 }
 
 function getMapData() {
@@ -206,6 +208,7 @@ function newConnection(socketId) {
         missilesMany: 0,
         airTime: 99,
         aliveTime: {'clock': 0, 'seconds': 0},
+        score: 0,
         socketId: socketId
     };
     gameObj.playersMap.set(socketId, playerObj);
@@ -242,15 +245,6 @@ function missileEmit(socketId, direction) {
 
 function disconnect(socketId) {
     gameObj.playersMap.delete(socketId);
-}
-
-function gotItem(socketId, itemKey) {
-    gameObj.itemsMap.delete(itemKey); // アイテム消去
-    addItem();
-    const playerObj = gameObj.playersMap.get(socketId);
-    playerObj.missilesMany = playerObj.missilesMany > 5 ? 6 : playerObj.missilesMany + 1;
-    gameObj.playersMap.set(socketId, playerObj);
-    return getMapData();
 }
 
 function addItem() {
@@ -338,11 +332,8 @@ function calculationBetweenTwoPoints(pX, pY, oX, oY, gameWidth, gameHeight) {
 
 module.exports = {
     newConnection,
-    getItems,
-    getPlayers,
     getMapData,
     updatePlayerDirection,
-    gotItem,
     missileEmit,
     disconnect
 };

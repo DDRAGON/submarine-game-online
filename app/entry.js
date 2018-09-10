@@ -58,6 +58,7 @@ function ticker() {
     drawSubmarine(ctx, gameObj.myPlayerObj);
     drawAirTimer(ctx2, gameObj.myPlayerObj.airTime);
     drawMissiles(ctx2, gameObj.myPlayerObj.missilesMany);
+    drawScore(ctx2, gameObj.myPlayerObj.score);
     gameObj.missileTimeFlame -= 1;
     gameObj.counter = (gameObj.counter + 1) % 10000;
 }
@@ -364,22 +365,9 @@ function sendMissileEmit(socket, direction) {
     socket.emit('missile emit', direction);
 }
 
-function getItem(ctx, myPlayerObj, item) {
-    if (
-        Math.abs(myPlayerObj.x - item.x) <= (gameObj.submarineImage.width/2 + gameObj.itemRadius) &&
-        Math.abs(myPlayerObj.y - item.y) <= (gameObj.submarineImage.width/2 + gameObj.itemRadius)
-    ) { // itemGot
-        const itemKey = `${item.x},${item.y}`;
-        gameObj.itemsMap.delete(itemKey);
-        socket.emit('got item', itemKey);
-        gameObj.myPlayerObj.missilesMany = gameObj.myPlayerObj.missilesMany > 5 ? 6 : gameObj.myPlayerObj.missilesMany + 1;
-        drawMissiles(gameObj.myPlayerObj.missilesMany);
-    }
-}
-
 function drawMissiles(ctx2, missilesMany) {
     for (let i = 0; i < missilesMany; i++) {
-        ctx2.drawImage(gameObj.missileImage, 50 * i, 180);
+        ctx2.drawImage(gameObj.missileImage, 50 * i, 80);
     }
 }
 
@@ -389,6 +377,13 @@ function drawAirTimer(ctx2, airTime) {
    ctx2.font = 'bold 40px Arial';
    ctx2.fillText(airTime, 110, 50);
 }
+
+function drawScore(ctx2, score) {
+    ctx2.fillStyle = "rgb(26, 26, 26)";
+    ctx2.font = '28px Arial';
+    ctx2.fillText(`score: ${score}`, 10, 180);
+}
+
 
 socket.on('start data', (startObj) => {
     gameObj.myPlayerObj  = startObj.playerObj;
