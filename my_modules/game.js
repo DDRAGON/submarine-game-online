@@ -277,6 +277,8 @@ function addAIs() {
                 aliveTime: {'clock': 0, 'seconds': 0},
                 score: 0,
                 level: level,
+                displayName: 'CPU',
+                thumbUrl: 'CPU',
                 id : id
             };
             gameObj.AIMap.set(id, playerObj);
@@ -322,6 +324,13 @@ function newConnection(socketId) {
 function updatePlayerDirection(socketId, direction) {
     const playerObj = gameObj.playersMap.get(socketId);
     playerObj.direction = direction;
+    gameObj.playersMap.set(socketId, playerObj);
+}
+
+function updateUserData(socketId, displayName, thumbUrl) {
+    const playerObj = gameObj.playersMap.get(socketId);
+    playerObj.displayName = displayName;
+    playerObj.thumbUrl = thumbUrl;
     gameObj.playersMap.set(socketId, playerObj);
 }
 
@@ -444,6 +453,7 @@ module.exports = {
     newConnection,
     getMapData,
     updatePlayerDirection,
+    updateUserData,
     missileEmit,
     disconnect
 };

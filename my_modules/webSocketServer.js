@@ -6,6 +6,9 @@ function createWebSocketServer(io, game) {
 
         socket.emit('start data', startObj);
 
+        socket.on('user data', (userData) => {
+            game.updateUserData(socket.id, userData.displayName, userData.thumbUrl);
+        });
 
         socket.on('change direction', (direction) => {
             game.updatePlayerDirection(socket.id, direction);

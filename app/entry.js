@@ -2,7 +2,7 @@
 import io from 'socket.io-client';
 import $ from 'jquery';
 
-const socket = io('http://localhost:3000');
+const socket = io('http://localhost:9000');
 const canvas = $('#rader')[0];
 canvas.width = 500;
 canvas.height = 500;
@@ -22,6 +22,8 @@ const gameObj = {
     fieldWidth: null,
     fieldHeight: null,
     bomCellPx: 32,
+    myDisplayName: $('#main').attr('data-displayName'),
+    myThumbUrl: $('#main').attr('data-thumbUrl'),
     counter: 0
 };
 
@@ -41,6 +43,13 @@ function init() {
     const bomListImage = new Image();
     bomListImage.src = '/images/bomlist.png';
     gameObj.bomListImage = bomListImage;
+
+    // Twitter アイコン
+    if (gameObj.myThumbUrl && gameObj.myThumbUrl !== 'anonymous') {
+        const twitterImage = new Image();
+        twitterImage.src = gameObj.myThumbUrl;
+        gameObj.twitterImage = twitterImage;
+    }
 }
 
 let deg = 0;
@@ -56,6 +65,7 @@ function ticker() {
 
     ctx.clearRect(0, 0, canvas.width, canvas.height); // まっさら
     drawRadar();
+    drawBorder(ctx, gameObj.myPlayerObj, gameObj.fieldWidth, gameObj.fieldHeight);
     drawMap(ctx, playerAndAiMap, gameObj.itemsMap, gameObj.airMap, gameObj.myPlayerObj, gameObj.flyingMissilesMap);
     drawSubmarine(ctx, gameObj.myPlayerObj);
     drawAirTimer(ctx2, gameObj.myPlayerObj.airTime);
@@ -66,6 +76,17 @@ function ticker() {
     gameObj.counter = (gameObj.counter + 1) % 10000;
 }
 setInterval(ticker, 33);
+
+function drawBorder(ctx, myPlayerObj, fieldWidth, fieldHeight) {
+   const distanceObj = calculationBetweenTwoPoints(
+      myPlayerObj.x, myPlayerObj.y, 0, 0, gameObj.fieldWidth, gameObj.fieldHeight, canvas.width, canvas.height
+   );
+
+   ctx.fillStyle = "rgb(255, 255, 255)";
+   ctx.fillRect(distanceObj.drawX, distanceObj.drawY, 1, gameObj.fieldHeight);
+   ctx.fillRect(distanceObj.drawX, distanceObj.drawY, gameObj.fieldWidth, 1);
+
+}
 
 function drawGameOver() {
    ctx.font = 'bold 76px arial black';
@@ -103,7 +124,7 @@ function drawRadar() {
     ctx.fill();
 
     ctx.restore(); // 元の設定を取得
-    deg += 3;
+    deg = (deg + 3) % 360;
 }
 
 const rotationDegreeByFlyingMissileDirection = {
@@ -148,6 +169,47 @@ function drawMap(ctx, playerAndAiMap, itemsMap, airMap, myPlayerObj, flyingMissi
             ctx.arc(distanceObj.drawX, distanceObj.drawY, clearRadius2, 0, Math.PI*2, true);
             ctx.fill();
 
+            if (tekiPlayerObj.displayName === 'CPU') {
+
+               ctx.strokeStyle = "rgba(250, 250, 250, 0.9)";
+               ctx.fillStyle = "rgba(250, 250, 250, 0.9)";
+               ctx.beginPath();
+               ctx.moveTo(distanceObj.drawX, distanceObj.drawY);
+               ctx.lineTo(distanceObj.drawX + 25, distanceObj.drawY - 25);
+               ctx.lineTo(distanceObj.drawX + 25 + 25, distanceObj.drawY - 25);
+               ctx.stroke();
+
+               ctx.font = '12px Arial';
+               ctx.fillText('CPU', distanceObj.drawX + 25, distanceObj.drawY - 25 - 1);
+
+            } else if (tekiPlayerObj.displayName === 'anonymous') {
+
+               ctx.strokeStyle = "rgba(250, 250, 250, 0.9)";
+               ctx.fillStyle = "rgba(250, 250, 250, 0.9)";
+               ctx.beginPath();
+               ctx.moveTo(distanceObj.drawX, distanceObj.drawY);
+               ctx.lineTo(distanceObj.drawX + 20, distanceObj.drawY - 20);
+               ctx.lineTo(distanceObj.drawX + 20 + 40, distanceObj.drawY - 20);
+               ctx.stroke();
+
+               ctx.font = '8px Arial';
+               ctx.fillText('anonymous', distanceObj.drawX + 20, distanceObj.drawY - 20 - 1);
+
+            } else if (tekiPlayerObj.displayName) {
+
+               ctx.strokeStyle = "rgba(250, 250, 250, 0.9)";
+               ctx.fillStyle = "rgba(250, 250, 250, 0.9)";
+               ctx.beginPath();
+               ctx.moveTo(distanceObj.drawX, distanceObj.drawY);
+               ctx.lineTo(distanceObj.drawX + 20, distanceObj.drawY - 20);
+               ctx.lineTo(distanceObj.drawX + 20 + 40, distanceObj.drawY - 20);
+               ctx.stroke();
+
+               ctx.font = '8px Arial';
+               ctx.fillText(tekiPlayerObj.displayName, distanceObj.drawX + 20, distanceObj.drawY - 20 - 1);
+
+            }
+
          } else if (tekiPlayerObj.isAlive === false) {
 
             drawBom(distanceObj.drawX, distanceObj.drawY, tekiPlayerObj.deadCount);
@@ -180,6 +242,17 @@ function drawMap(ctx, playerAndAiMap, itemsMap, airMap, myPlayerObj, flyingMissi
                - gameObj.missileImage.height / 2
             );
             ctx.restore();
+
+            ctx.strokeStyle = "rgba(250, 250, 250, 0.9)";
+            ctx.fillStyle = "rgba(250, 250, 250, 0.9)";
+            ctx.beginPath();
+            ctx.moveTo(distanceObj.drawX, distanceObj.drawY);
+            ctx.lineTo(distanceObj.drawX + 20, distanceObj.drawY - 20);
+            ctx.lineTo(distanceObj.drawX + 20 + 35, distanceObj.drawY - 20);
+            ctx.stroke();
+
+            ctx.font = '11px Arial';
+            ctx.fillText('missile', distanceObj.drawX + 20, distanceObj.drawY - 20 - 2);
 
          } else {
 
@@ -219,6 +292,17 @@ function drawMap(ctx, playerAndAiMap, itemsMap, airMap, myPlayerObj, flyingMissi
             ctx.beginPath();
             ctx.arc(distanceObj.drawX, distanceObj.drawY, clearRadius3, 0, Math.PI*2, true);
             ctx.fill();
+
+            ctx.strokeStyle = "rgba(250, 250, 250, 0.9)";
+            ctx.fillStyle = "rgba(250, 250, 250, 0.9)";
+            ctx.beginPath();
+            ctx.moveTo(distanceObj.drawX, distanceObj.drawY);
+            ctx.lineTo(distanceObj.drawX + 30, distanceObj.drawY - 30);
+            ctx.lineTo(distanceObj.drawX + 30 + 35, distanceObj.drawY - 30);
+            ctx.stroke();
+
+            ctx.font = '11px Arial';
+            ctx.fillText('missile', distanceObj.drawX + 30, distanceObj.drawY - 30 - 2);
          }
       }
    }
@@ -231,7 +315,11 @@ function drawMap(ctx, playerAndAiMap, itemsMap, airMap, myPlayerObj, flyingMissi
         );
 
         if (distanceObj.distanceX <= (canvas.width / 2) && distanceObj.distanceY <= (canvas.height / 2)) {
-            ctx.fillStyle = "rgb(255, 165, 0)";
+
+           const degreeDiff = calcDegreeDiffFromRadar(deg, distanceObj.degree);
+           const toumeido = 1 - (0.8 * degreeDiff / 360).toFixed(2);
+
+            ctx.fillStyle = `rgba(255, 165, 0, ${toumeido})`;
             ctx.beginPath();
             ctx.arc(distanceObj.drawX, distanceObj.drawY, gameObj.itemRadius, 0, Math.PI*2, true);
             ctx.fill();
@@ -306,12 +394,31 @@ function calculationBetweenTwoPoints(pX, pY, oX, oY, gameWidth, gameHeight, canv
         }
     }
 
+    const degree = calcTwoPointsDegree(drawX, drawY, canvasWidth / 2, canvasHeight / 2);
+
+
     return {
         distanceX,
         distanceY,
         drawX,
-        drawY
+        drawY,
+        degree
     };
+}
+
+function calcTwoPointsDegree(x1, y1, x2, y2) {
+   const radian = Math.atan2(y2 - y1,x2 - x1);
+   const degree = radian * 180 / Math.PI + 180;
+   return degree;
+}
+
+function calcDegreeDiffFromRadar(degRader, degItem) {
+   let diff = degRader - degItem;
+   if (diff < 0) {
+      diff += 360;
+   }
+
+   return diff;
 }
 
 const rotationDegreeByDirection = {
@@ -334,6 +441,28 @@ function drawSubmarine(ctx, myPlayerObj){
             -(gameObj.submarineImage.height / 2)
         );
         ctx.restore();
+
+        if (gameObj.myDisplayName) {
+           const rectWidth = gameObj.submarineImage.width - 28;
+
+           if (gameObj.myThumbUrl === 'anonymous') { // anonymous
+
+           } else if (gameObj.myThumbUrl === 'CPU') { // CPU
+
+           } else if (gameObj.myThumbUrl) {
+
+              /*
+              ctx.drawImage(
+                 gameObj.twitterImage,
+                 canvas.width / 2  - (rectWidth / 2) + 1,
+                 canvas.height / 2 - (rectWidth / 2) + 3,
+                 rectWidth, rectWidth
+              );
+              */
+
+           }
+
+        }
 
     } else {
 
@@ -389,7 +518,6 @@ function drawScore(ctx2, score) {
 
 function drawRanking(ctx2, playerAndAiMap) {
    const playerAndAiArray = [].concat(Array.from(playerAndAiMap));
-   console.log(playerAndAiArray);
    playerAndAiArray.sort(function(a, b) {
       return b[1].score - a[1].score;
    });
@@ -402,7 +530,10 @@ function drawRanking(ctx2, playerAndAiMap) {
 
    for (let i = 0; i < 10; i++) {
       const rank = i + 1;
-      ctx2.fillText(`${rank}: ${playerAndAiArray[i][1].score}`, 10, 220 + (rank * 26));
+      ctx2.fillText(
+          `${rank}th ${playerAndAiArray[i][1].displayName} ${playerAndAiArray[i][1].score}`,
+          10, 220 + (rank * 26)
+       );
    }
 }
 
@@ -411,6 +542,7 @@ socket.on('start data', (startObj) => {
     gameObj.myPlayerObj  = startObj.playerObj;
     gameObj.fieldWidth   = startObj.fieldWidth;
     gameObj.fieldHeight  = startObj.fieldHeight;
+    socket.emit('user data', {displayName: gameObj.myDisplayName, thumbUrl: gameObj.myThumbUrl});
 });
 
 socket.on('map data', (mapData) => {
@@ -419,12 +551,20 @@ socket.on('map data', (mapData) => {
     gameObj.itemsMap = new Map(mapData.itemsMap);
     gameObj.airMap = new Map(mapData.airMap);
     gameObj.flyingMissilesMap = mapData.flyingMissilesMap;
-    gameObj.myPlayerObj = gameObj.playersMap.get(gameObj.myPlayerObj.socketId); // 自分の情報も更新
+    if (gameObj.playersMap.has(gameObj.myPlayerObj.socketId)) {
+       gameObj.myPlayerObj = gameObj.playersMap.get(gameObj.myPlayerObj.socketId); // 自分の情報も更新
+    }
 
     //drawMap(ctx, gameObj.playersMap, gameObj.itemsMap, gameObj.airMap, gameObj.myPlayerObj);
     //drawSubmarine(ctx, gameObj.myPlayerObj.direction);
     //drawMissiles(gameObj.myPlayerObj.missilesMany);
 });
+
+socket.on('disconnect', () => {
+   socket.disconnect();
+});
+
+
 
 
 $(window).keydown(function(event){
