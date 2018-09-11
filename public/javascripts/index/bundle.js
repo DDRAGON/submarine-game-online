@@ -3611,7 +3611,7 @@ canvas.height = 500;
 var ctx = canvas.getContext('2d');
 var canvas2 = (0, _jquery2.default)('#score')[0];
 canvas2.width = 300;
-canvas2.height = 300;
+canvas2.height = 500;
 var ctx2 = canvas2.getContext('2d');
 
 var gameObj = {
@@ -3654,13 +3654,16 @@ function ticker() {
         return;
     }
 
+    var playerAndAiMap = new Map(Array.from(gameObj.playersMap).concat(Array.from(gameObj.AIMap)));
+
     ctx.clearRect(0, 0, canvas.width, canvas.height); // まっさら
     drawRadar();
-    drawMap(ctx, gameObj.playersMap, gameObj.itemsMap, gameObj.airMap, gameObj.myPlayerObj, gameObj.flyingMissiles);
+    drawMap(ctx, playerAndAiMap, gameObj.itemsMap, gameObj.airMap, gameObj.myPlayerObj, gameObj.flyingMissilesMap);
     drawSubmarine(ctx, gameObj.myPlayerObj);
     drawAirTimer(ctx2, gameObj.myPlayerObj.airTime);
     drawMissiles(ctx2, gameObj.myPlayerObj.missilesMany);
     drawScore(ctx2, gameObj.myPlayerObj.score);
+    drawRanking(ctx2, playerAndAiMap);
     gameObj.missileTimeFlame -= 1;
     gameObj.counter = (gameObj.counter + 1) % 10000;
 }
@@ -3708,15 +3711,15 @@ function drawRadar() {
 var rotationDegreeByFlyingMissileDirection = {
     'left': 270, 'up': 0, 'down': 180, 'right': 90
 };
-function drawMap(ctx, playersMap, itemsMap, airMap, myPlayerObj, flyingMissiles) {
+function drawMap(ctx, playerAndAiMap, itemsMap, airMap, myPlayerObj, flyingMissilesMap) {
 
-    // 敵プレイヤーの描画
+    // 敵プレイヤーとAIの描画
     var _iteratorNormalCompletion = true;
     var _didIteratorError = false;
     var _iteratorError = undefined;
 
     try {
-        for (var _iterator = playersMap[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+        for (var _iterator = playerAndAiMap[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
             var _ref = _step.value;
 
             var _ref2 = _slicedToArray(_ref, 2);
@@ -3786,8 +3789,13 @@ function drawMap(ctx, playersMap, itemsMap, airMap, myPlayerObj, flyingMissiles)
     var _iteratorError2 = undefined;
 
     try {
-        for (var _iterator2 = flyingMissiles[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
-            var flyingMissile = _step2.value;
+        for (var _iterator2 = flyingMissilesMap[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
+            var _ref3 = _step2.value;
+
+            var _ref4 = _slicedToArray(_ref3, 2);
+
+            var missileId = _ref4[0];
+            var flyingMissile = _ref4[1];
 
 
             var distanceObj = calculationBetweenTwoPoints(myPlayerObj.x, myPlayerObj.y, flyingMissile.x, flyingMissile.y, gameObj.fieldWidth, gameObj.fieldHeight, canvas.width, canvas.height);
@@ -3902,12 +3910,12 @@ function drawMap(ctx, playersMap, itemsMap, airMap, myPlayerObj, flyingMissiles)
 
     try {
         for (var _iterator4 = airMap[Symbol.iterator](), _step4; !(_iteratorNormalCompletion4 = (_step4 = _iterator4.next()).done); _iteratorNormalCompletion4 = true) {
-            var _ref3 = _step4.value;
+            var _ref5 = _step4.value;
 
-            var _ref4 = _slicedToArray(_ref3, 2);
+            var _ref6 = _slicedToArray(_ref5, 2);
 
-            var airKey = _ref4[0];
-            var airObj = _ref4[1];
+            var airKey = _ref6[0];
+            var airObj = _ref6[1];
 
 
             var distanceObj = calculationBetweenTwoPoints(myPlayerObj.x, myPlayerObj.y, airObj.x, airObj.y, gameObj.fieldWidth, gameObj.fieldHeight, canvas.width, canvas.height);
@@ -4024,7 +4032,7 @@ function drawBom(drawX, drawY, deadCount) {
     var cropX = drawBomNumber % (gameObj.bomListImage.width / gameObj.bomCellPx) * gameObj.bomCellPx;
     var cropY = Math.floor(drawBomNumber / (gameObj.bomListImage.width / gameObj.bomCellPx)) * gameObj.bomCellPx;
 
-    ctx.drawImage(gameObj.bomListImage, cropX, cropY, gameObj.bomCellPx, gameObj.bomCellPx, drawX, drawY, gameObj.bomCellPx, gameObj.bomCellPx); // 画像データ、切り抜き左、切り抜き上、幅、幅、表示x、表示y、幅、幅
+    ctx.drawImage(gameObj.bomListImage, cropX, cropY, gameObj.bomCellPx, gameObj.bomCellPx, drawX - gameObj.bomCellPx / 2, drawY - gameObj.bomCellPx / 2, gameObj.bomCellPx, gameObj.bomCellPx); // 画像データ、切り抜き左、切り抜き上、幅、幅、表示x、表示y、幅、幅
 }
 
 function sendChangeDirection(socket, direction) {
@@ -4054,6 +4062,25 @@ function drawScore(ctx2, score) {
     ctx2.fillText('score: ' + score, 10, 180);
 }
 
+function drawRanking(ctx2, playerAndAiMap) {
+    var playerAndAiArray = [].concat(Array.from(playerAndAiMap));
+    console.log(playerAndAiArray);
+    playerAndAiArray.sort(function (a, b) {
+        return b[1].score - a[1].score;
+    });
+
+    ctx2.fillStyle = "rgb(0, 0, 0)";
+    ctx2.fillRect(0, 220, canvas2.width, 3);
+
+    ctx2.fillStyle = "rgb(26, 26, 26)";
+    ctx2.font = '20px Arial';
+
+    for (var i = 0; i < 10; i++) {
+        var rank = i + 1;
+        ctx2.fillText(rank + ': ' + playerAndAiArray[i][1].score, 10, 220 + rank * 26);
+    }
+}
+
 socket.on('start data', function (startObj) {
     gameObj.myPlayerObj = startObj.playerObj;
     gameObj.fieldWidth = startObj.fieldWidth;
@@ -4062,9 +4089,10 @@ socket.on('start data', function (startObj) {
 
 socket.on('map data', function (mapData) {
     gameObj.playersMap = new Map(mapData.playersMap);
+    gameObj.AIMap = new Map(mapData.AIMap);
     gameObj.itemsMap = new Map(mapData.itemsMap);
     gameObj.airMap = new Map(mapData.airMap);
-    gameObj.flyingMissiles = mapData.flyingMissiles;
+    gameObj.flyingMissilesMap = mapData.flyingMissilesMap;
     gameObj.myPlayerObj = gameObj.playersMap.get(gameObj.myPlayerObj.socketId); // 自分の情報も更新
 
     //drawMap(ctx, gameObj.playersMap, gameObj.itemsMap, gameObj.airMap, gameObj.myPlayerObj);

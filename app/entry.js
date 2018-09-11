@@ -9,7 +9,7 @@ canvas.height = 500;
 const ctx = canvas.getContext('2d');
 const canvas2 = $('#score')[0];
 canvas2.width = 300;
-canvas2.height = 300;
+canvas2.height = 500;
 const ctx2 = canvas2.getContext('2d');
 
 const gameObj = {
@@ -52,13 +52,16 @@ function ticker() {
        return;
     }
 
+    const playerAndAiMap = new Map(Array.from(gameObj.playersMap).concat(Array.from(gameObj.AIMap)));
+
     ctx.clearRect(0, 0, canvas.width, canvas.height); // まっさら
     drawRadar();
-    drawMap(ctx, gameObj.playersMap, gameObj.itemsMap, gameObj.airMap, gameObj.myPlayerObj, gameObj.flyingMissiles);
+    drawMap(ctx, playerAndAiMap, gameObj.itemsMap, gameObj.airMap, gameObj.myPlayerObj, gameObj.flyingMissilesMap);
     drawSubmarine(ctx, gameObj.myPlayerObj);
     drawAirTimer(ctx2, gameObj.myPlayerObj.airTime);
     drawMissiles(ctx2, gameObj.myPlayerObj.missilesMany);
     drawScore(ctx2, gameObj.myPlayerObj.score);
+    drawRanking(ctx2, playerAndAiMap);
     gameObj.missileTimeFlame -= 1;
     gameObj.counter = (gameObj.counter + 1) % 10000;
 }
@@ -106,10 +109,10 @@ function drawRadar() {
 const rotationDegreeByFlyingMissileDirection = {
     'left': 270, 'up': 0, 'down': 180, 'right': 90
 };
-function drawMap(ctx, playersMap, itemsMap, airMap, myPlayerObj, flyingMissiles) {
+function drawMap(ctx, playerAndAiMap, itemsMap, airMap, myPlayerObj, flyingMissilesMap) {
 
-   // 敵プレイヤーの描画
-   for (let [key, tekiPlayerObj] of playersMap) {
+   // 敵プレイヤーとAIの描画
+   for (let [key, tekiPlayerObj] of playerAndAiMap) {
       if (key === myPlayerObj.socketId) { continue; } // 自分は描画しない
 
       const distanceObj = calculationBetweenTwoPoints(
@@ -154,7 +157,7 @@ function drawMap(ctx, playersMap, itemsMap, airMap, myPlayerObj, flyingMissiles)
    }
 
    // 飛んでいるミサイルの描画
-   for (let flyingMissile of flyingMissiles) {
+   for (let [missileId, flyingMissile] of flyingMissilesMap) {
 
       const distanceObj = calculationBetweenTwoPoints(
          myPlayerObj.x, myPlayerObj.y, flyingMissile.x, flyingMissile.y, gameObj.fieldWidth, gameObj.fieldHeight, canvas.width, canvas.height
@@ -352,7 +355,7 @@ function drawBom(drawX, drawY, deadCount) {
       gameObj.bomListImage,
       cropX,cropY,
       gameObj.bomCellPx, gameObj.bomCellPx,
-      drawX, drawY,
+      drawX - gameObj.bomCellPx / 2, drawY - gameObj.bomCellPx / 2,
       gameObj.bomCellPx, gameObj.bomCellPx
    ); // 画像データ、切り抜き左、切り抜き上、幅、幅、表示x、表示y、幅、幅
 }
@@ -384,6 +387,25 @@ function drawScore(ctx2, score) {
     ctx2.fillText(`score: ${score}`, 10, 180);
 }
 
+function drawRanking(ctx2, playerAndAiMap) {
+   const playerAndAiArray = [].concat(Array.from(playerAndAiMap));
+   console.log(playerAndAiArray);
+   playerAndAiArray.sort(function(a, b) {
+      return b[1].score - a[1].score;
+   });
+
+   ctx2.fillStyle = "rgb(0, 0, 0)";
+   ctx2.fillRect(0, 220, canvas2.width, 3);
+
+   ctx2.fillStyle = "rgb(26, 26, 26)";
+   ctx2.font = '20px Arial';
+
+   for (let i = 0; i < 10; i++) {
+      const rank = i + 1;
+      ctx2.fillText(`${rank}: ${playerAndAiArray[i][1].score}`, 10, 220 + (rank * 26));
+   }
+}
+
 
 socket.on('start data', (startObj) => {
     gameObj.myPlayerObj  = startObj.playerObj;
@@ -393,9 +415,10 @@ socket.on('start data', (startObj) => {
 
 socket.on('map data', (mapData) => {
     gameObj.playersMap = new Map(mapData.playersMap);
+    gameObj.AIMap = new Map(mapData.AIMap);
     gameObj.itemsMap = new Map(mapData.itemsMap);
     gameObj.airMap = new Map(mapData.airMap);
-    gameObj.flyingMissiles = mapData.flyingMissiles;
+    gameObj.flyingMissilesMap = mapData.flyingMissilesMap;
     gameObj.myPlayerObj = gameObj.playersMap.get(gameObj.myPlayerObj.socketId); // 自分の情報も更新
 
     //drawMap(ctx, gameObj.playersMap, gameObj.itemsMap, gameObj.airMap, gameObj.myPlayerObj);
