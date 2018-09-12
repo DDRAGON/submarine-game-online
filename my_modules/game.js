@@ -8,9 +8,9 @@ const gameObj = {
     missileSpeed: 3,
     missileWidth: 30,
     missileHeight: 30,
-    fieldWidth: 900,
-    fieldHeight: 900,
-    addingAiPlayerNum: 10,
+    fieldWidth: 800,
+    fieldHeight: 800,
+    addingAiPlayerNum: 11,
     itemTotal: 20,
     airTotal:30,
     itemPoint: 3,
@@ -33,6 +33,7 @@ const gameTicker = setInterval(() => {
     AIMoveDecision(gameObj.AIMap); // AI の行動選択
     moveAIs(gameObj.AIMap); // AI の移動
     moveMissile(gameObj.flyingMissilesMap); // ミサイルの移動
+    console.log(`p: ${gameObj.playersMap.size}, a: ${gameObj.AIMap.size}`);
     checkGetItem(gameObj.playersMap, gameObj.itemsMap, gameObj.airMap, gameObj.flyingMissilesMap);
     checkGetItem(gameObj.AIMap, gameObj.itemsMap, gameObj.airMap, gameObj.flyingMissilesMap);
     addAIs();
@@ -165,6 +166,10 @@ function moveMissile(flyingMissilesMap) { // ミサイルの移動
                 flyingMissile.x += gameObj.missileSpeed;
                 break;
         }
+        if (flyingMissile.x > gameObj.fieldWidth) flyingMissile.x -= gameObj.fieldWidth;
+        if (flyingMissile.x < 0) flyingMissile.x += gameObj.fieldWidth;
+        if (flyingMissile.y < 0) flyingMissile.y += gameObj.fieldHeight;
+        if (flyingMissile.y > gameObj.fieldHeight) flyingMissile.y -= gameObj.fieldHeight;
     }
 }
 
@@ -182,7 +187,7 @@ const airRadius = 6;
 const addAirTime = 30;
 function checkGetItem(playersMap, itemsMap, airMap, flyingMissilesMap) {
     for (let [id, playerObj] of playersMap) {
-        if (playerObj.isAlive === false) { return; }
+        if (playerObj.isAlive === false) { continue; }
 
         // アイテムのミサイル（赤丸）
         for (let [itemKey, itemObj] of itemsMap) {
@@ -233,11 +238,19 @@ function checkGetItem(playersMap, itemsMap, airMap, flyingMissilesMap) {
                playerObj.x, playerObj.y, flyingMissile.x, flyingMissile.y, gameObj.fieldWidth, gameObj.fieldHeight
             );
 
+            // デバッグログ
+            if (gameObj.playersMap.has(flyingMissile.emitPlayerId)) {
+                console.log(`${flyingMissile.x},${flyingMissile.y}, ${playerObj.displayName}:${playerObj.x},${playerObj.y}, ${distanceObj.distanceX},${distanceObj.distanceY}`);
+            }
+
             if (
                 distanceObj.distanceX <= (submarineImageWidth/2 + gameObj.missileWidth/2) &&
                 distanceObj.distanceY <= (submarineImageWidth/2 + gameObj.missileHeight/2) &&
                 id !== flyingMissile.emitPlayerId
             ) {
+                if (gameObj.playersMap.has(flyingMissile.emitPlayerId)) {
+                    console.log('hit !');// デバッグログ
+                }
                 playerObj.isAlive = false;
                 flyingMissilesMap.delete(missileId);
 
@@ -250,6 +263,10 @@ function checkGetItem(playersMap, itemsMap, airMap, flyingMissilesMap) {
                     const emitAI = gameObj.AIMap.get(flyingMissile.emitPlayerId);
                     emitAI.score += gameObj.killPoint;
                     gameObj.AIMap.set(flyingMissile.emitPlayerId, emitAI);
+                }
+            } else {
+                if (gameObj.playersMap.has(flyingMissile.emitPlayerId)) {
+                    console.log('nothing.'); // デバッグログ
                 }
             }
         }

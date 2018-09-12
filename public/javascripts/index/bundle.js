@@ -3660,7 +3660,7 @@ function ticker() {
     if (!gameObj.myPlayerObj) return;
     if (gameObj.myPlayerObj.isAlive === false && gameObj.myPlayerObj.deadCount > 20) {
         drawGameOver();
-        return;
+        //return;
     }
 
     var playerAndAiMap = new Map(Array.from(gameObj.playersMap).concat(Array.from(gameObj.AIMap)));
@@ -4134,6 +4134,7 @@ function calcDegreeDiffFromRadar(degRader, degItem) {
 }
 
 function calcOpacity(degreeDiff) {
+    degreeDiff = degreeDiff > 320 ? 360 : degreeDiff; // もう少しだけ暗くするコツ
     return (1 - 1 * degreeDiff / 360).toFixed(2);
     //return (1 - 1 * degreeDiff / 180).toFixed(2);
 }
@@ -4231,6 +4232,8 @@ function drawRanking(ctx2, playerAndAiMap) {
     ctx2.font = '20px Arial';
 
     for (var i = 0; i < 10; i++) {
+        if (!playerAndAiArray[i]) return;
+
         var rank = i + 1;
         ctx2.fillText(rank + 'th ' + playerAndAiArray[i][1].displayName + ' ' + playerAndAiArray[i][1].score, 10, 220 + rank * 26);
     }
