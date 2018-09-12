@@ -3667,7 +3667,7 @@ function ticker() {
 
     ctx.clearRect(0, 0, canvas.width, canvas.height); // まっさら
     drawRadar();
-    drawBorder(ctx, gameObj.myPlayerObj, gameObj.fieldWidth, gameObj.fieldHeight);
+    //drawBorder(ctx, gameObj.myPlayerObj, gameObj.fieldWidth, gameObj.fieldHeight);
     drawMap(ctx, playerAndAiMap, gameObj.itemsMap, gameObj.airMap, gameObj.myPlayerObj, gameObj.flyingMissilesMap);
     drawSubmarine(ctx, gameObj.myPlayerObj);
     drawAirTimer(ctx2, gameObj.myPlayerObj.airTime);
@@ -3723,7 +3723,7 @@ function drawRadar() {
     ctx.fill();
 
     ctx.restore(); // 元の設定を取得
-    deg = (deg + 3) % 360;
+    deg = (deg + 5) % 360;
 }
 
 var rotationDegreeByFlyingMissileDirection = {
@@ -3755,35 +3755,38 @@ function drawMap(ctx, playerAndAiMap, itemsMap, airMap, myPlayerObj, flyingMissi
 
                 if (tekiPlayerObj.isAlive === true) {
 
+                    var degreeDiff = calcDegreeDiffFromRadar(deg, distanceObj.degree);
+                    var toumeido = calcOpacity(degreeDiff);
+
                     var drawRadius = gameObj.counter % 12 + 2 + 12;
                     var clearRadius = drawRadius - 2;
                     var drawRadius2 = gameObj.counter % 12 + 2;
                     var clearRadius2 = drawRadius2 - 2;
 
-                    ctx.fillStyle = "rgb(255, 0, 0)";
+                    ctx.fillStyle = 'rgba(255, 0, 0, ' + toumeido + ')';
                     ctx.beginPath();
                     ctx.arc(distanceObj.drawX, distanceObj.drawY, drawRadius, 0, Math.PI * 2, true);
                     ctx.fill();
 
-                    ctx.fillStyle = "rgb(0, 20, 50)";
+                    ctx.fillStyle = 'rgb(0, 20, 50)';
                     ctx.beginPath();
                     ctx.arc(distanceObj.drawX, distanceObj.drawY, clearRadius, 0, Math.PI * 2, true);
                     ctx.fill();
 
-                    ctx.fillStyle = "rgb(255, 0, 0)";
+                    ctx.fillStyle = 'rgba(255, 0, 0, ' + toumeido + ')';
                     ctx.beginPath();
                     ctx.arc(distanceObj.drawX, distanceObj.drawY, drawRadius2, 0, Math.PI * 2, true);
                     ctx.fill();
 
-                    ctx.fillStyle = "rgb(0, 20, 50)";
+                    ctx.fillStyle = 'rgb(0, 20, 50)';
                     ctx.beginPath();
                     ctx.arc(distanceObj.drawX, distanceObj.drawY, clearRadius2, 0, Math.PI * 2, true);
                     ctx.fill();
 
                     if (tekiPlayerObj.displayName === 'CPU') {
 
-                        ctx.strokeStyle = "rgba(250, 250, 250, 0.9)";
-                        ctx.fillStyle = "rgba(250, 250, 250, 0.9)";
+                        ctx.strokeStyle = 'rgba(250, 250, 250, ' + toumeido + ')';
+                        ctx.fillStyle = 'rgba(250, 250, 250, ' + toumeido + ')';
                         ctx.beginPath();
                         ctx.moveTo(distanceObj.drawX, distanceObj.drawY);
                         ctx.lineTo(distanceObj.drawX + 25, distanceObj.drawY - 25);
@@ -3794,8 +3797,8 @@ function drawMap(ctx, playerAndAiMap, itemsMap, airMap, myPlayerObj, flyingMissi
                         ctx.fillText('CPU', distanceObj.drawX + 25, distanceObj.drawY - 25 - 1);
                     } else if (tekiPlayerObj.displayName === 'anonymous') {
 
-                        ctx.strokeStyle = "rgba(250, 250, 250, 0.9)";
-                        ctx.fillStyle = "rgba(250, 250, 250, 0.9)";
+                        ctx.strokeStyle = 'rgba(250, 250, 250, ' + toumeido + ')';
+                        ctx.fillStyle = 'rgba(250, 250, 250, ' + toumeido + ')';
                         ctx.beginPath();
                         ctx.moveTo(distanceObj.drawX, distanceObj.drawY);
                         ctx.lineTo(distanceObj.drawX + 20, distanceObj.drawY - 20);
@@ -3806,8 +3809,8 @@ function drawMap(ctx, playerAndAiMap, itemsMap, airMap, myPlayerObj, flyingMissi
                         ctx.fillText('anonymous', distanceObj.drawX + 20, distanceObj.drawY - 20 - 1);
                     } else if (tekiPlayerObj.displayName) {
 
-                        ctx.strokeStyle = "rgba(250, 250, 250, 0.9)";
-                        ctx.fillStyle = "rgba(250, 250, 250, 0.9)";
+                        ctx.strokeStyle = 'rgba(250, 250, 250, ' + toumeido + ')';
+                        ctx.fillStyle = 'rgba(250, 250, 250, ' + toumeido + ')';
                         ctx.beginPath();
                         ctx.moveTo(distanceObj.drawX, distanceObj.drawY);
                         ctx.lineTo(distanceObj.drawX + 20, distanceObj.drawY - 20);
@@ -3880,6 +3883,9 @@ function drawMap(ctx, playerAndAiMap, itemsMap, airMap, myPlayerObj, flyingMissi
                     ctx.fillText('missile', distanceObj.drawX + 20, distanceObj.drawY - 20 - 2);
                 } else {
 
+                    var _degreeDiff = calcDegreeDiffFromRadar(deg, distanceObj.degree);
+                    var _toumeido = calcOpacity(_degreeDiff);
+
                     var drawRadius1 = gameObj.counter % 8 + 2 + 20;
                     var clearRadius1 = drawRadius1 - 2;
                     var _drawRadius = gameObj.counter % 8 + 2 + 10;
@@ -3887,7 +3893,7 @@ function drawMap(ctx, playerAndAiMap, itemsMap, airMap, myPlayerObj, flyingMissi
                     var drawRadius3 = gameObj.counter % 8 + 2 + 0;
                     var clearRadius3 = drawRadius3 - 2;
 
-                    ctx.fillStyle = "rgb(255, 0, 0)";
+                    ctx.fillStyle = 'rgba(255, 0, 0, ' + _toumeido + ')';
                     ctx.beginPath();
                     ctx.arc(distanceObj.drawX, distanceObj.drawY, drawRadius1, 0, Math.PI * 2, true);
                     ctx.fill();
@@ -3897,7 +3903,7 @@ function drawMap(ctx, playerAndAiMap, itemsMap, airMap, myPlayerObj, flyingMissi
                     ctx.arc(distanceObj.drawX, distanceObj.drawY, clearRadius1, 0, Math.PI * 2, true);
                     ctx.fill();
 
-                    ctx.fillStyle = "rgb(255, 0, 0)";
+                    ctx.fillStyle = 'rgba(255, 0, 0, ' + _toumeido + ')';
                     ctx.beginPath();
                     ctx.arc(distanceObj.drawX, distanceObj.drawY, _drawRadius, 0, Math.PI * 2, true);
                     ctx.fill();
@@ -3907,7 +3913,7 @@ function drawMap(ctx, playerAndAiMap, itemsMap, airMap, myPlayerObj, flyingMissi
                     ctx.arc(distanceObj.drawX, distanceObj.drawY, _clearRadius, 0, Math.PI * 2, true);
                     ctx.fill();
 
-                    ctx.fillStyle = "rgb(255, 0, 0)";
+                    ctx.fillStyle = 'rgba(255, 0, 0, ' + _toumeido + ')';
                     ctx.beginPath();
                     ctx.arc(distanceObj.drawX, distanceObj.drawY, drawRadius3, 0, Math.PI * 2, true);
                     ctx.fill();
@@ -3917,8 +3923,8 @@ function drawMap(ctx, playerAndAiMap, itemsMap, airMap, myPlayerObj, flyingMissi
                     ctx.arc(distanceObj.drawX, distanceObj.drawY, clearRadius3, 0, Math.PI * 2, true);
                     ctx.fill();
 
-                    ctx.strokeStyle = "rgba(250, 250, 250, 0.9)";
-                    ctx.fillStyle = "rgba(250, 250, 250, 0.9)";
+                    ctx.strokeStyle = 'rgba(250, 250, 250, ' + _toumeido + ')';
+                    ctx.fillStyle = 'rgba(250, 250, 250, ' + _toumeido + ')';
                     ctx.beginPath();
                     ctx.moveTo(distanceObj.drawX, distanceObj.drawY);
                     ctx.lineTo(distanceObj.drawX + 30, distanceObj.drawY - 30);
@@ -3960,10 +3966,10 @@ function drawMap(ctx, playerAndAiMap, itemsMap, airMap, myPlayerObj, flyingMissi
 
             if (distanceObj.distanceX <= canvas.width / 2 && distanceObj.distanceY <= canvas.height / 2) {
 
-                var degreeDiff = calcDegreeDiffFromRadar(deg, distanceObj.degree);
-                var toumeido = 1 - (0.8 * degreeDiff / 360).toFixed(2);
+                var _degreeDiff2 = calcDegreeDiffFromRadar(deg, distanceObj.degree);
+                var _toumeido2 = calcOpacity(_degreeDiff2);
 
-                ctx.fillStyle = 'rgba(255, 165, 0, ' + toumeido + ')';
+                ctx.fillStyle = 'rgba(255, 165, 0, ' + _toumeido2 + ')';
                 ctx.beginPath();
                 ctx.arc(distanceObj.drawX, distanceObj.drawY, gameObj.itemRadius, 0, Math.PI * 2, true);
                 ctx.fill();
@@ -4003,7 +4009,11 @@ function drawMap(ctx, playerAndAiMap, itemsMap, airMap, myPlayerObj, flyingMissi
             var distanceObj = calculationBetweenTwoPoints(myPlayerObj.x, myPlayerObj.y, airObj.x, airObj.y, gameObj.fieldWidth, gameObj.fieldHeight, canvas.width, canvas.height);
 
             if (distanceObj.distanceX <= canvas.width / 2 && distanceObj.distanceY <= canvas.height / 2) {
-                ctx.fillStyle = "rgb(0, 220, 255)";
+
+                var _degreeDiff3 = calcDegreeDiffFromRadar(deg, distanceObj.degree);
+                var _toumeido3 = calcOpacity(_degreeDiff3);
+
+                ctx.fillStyle = 'rgb(0, 220, 255, ' + _toumeido3 + ')';
                 ctx.beginPath();
                 ctx.arc(distanceObj.drawX, distanceObj.drawY, gameObj.airRadius, 0, Math.PI * 2, true);
                 ctx.fill();
@@ -4092,6 +4102,28 @@ function calcTwoPointsDegree(x1, y1, x2, y2) {
     return degree;
 }
 
+/*
+function calcDegreeDiffFromRadar(degRader, degItem) {
+   degRader -= 15;
+   let diff;
+   let tmpDiff;
+   if (degRader >= degItem) {
+      diff = degRader - degItem;
+      tmpDiff = degItem + 360 - degRader;
+      if (diff > tmpDiff) {
+         diff = tmpDiff;
+      }
+   } else {
+      diff = degItem - degRader;
+      tmpDiff = degRader + 360 - degItem;
+      if (diff > tmpDiff) {
+         diff = tmpDiff;
+      }
+   }
+
+   return diff;
+}
+*/
 function calcDegreeDiffFromRadar(degRader, degItem) {
     var diff = degRader - degItem;
     if (diff < 0) {
@@ -4099,6 +4131,11 @@ function calcDegreeDiffFromRadar(degRader, degItem) {
     }
 
     return diff;
+}
+
+function calcOpacity(degreeDiff) {
+    return (1 - 1 * degreeDiff / 360).toFixed(2);
+    //return (1 - 1 * degreeDiff / 180).toFixed(2);
 }
 
 var rotationDegreeByDirection = {
@@ -4140,9 +4177,7 @@ function drawSubmarine(ctx, myPlayerObj) {
         }
     } else {
 
-        var drawX = canvas.width / 2 - gameObj.bomCellPx / 2;
-        var drawY = canvas.height / 2 - gameObj.bomCellPx / 2;
-        drawBom(drawX, drawY, myPlayerObj.deadCount);
+        drawBom(canvas.width / 2, canvas.height / 2, myPlayerObj.deadCount);
     }
 }
 
