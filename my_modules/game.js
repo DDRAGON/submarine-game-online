@@ -33,7 +33,6 @@ const gameTicker = setInterval(() => {
     AIMoveDecision(gameObj.AIMap); // AI の行動選択
     moveAIs(gameObj.AIMap); // AI の移動
     moveMissile(gameObj.flyingMissilesMap); // ミサイルの移動
-    console.log(`p: ${gameObj.playersMap.size}, a: ${gameObj.AIMap.size}`);
     checkGetItem(gameObj.playersMap, gameObj.itemsMap, gameObj.airMap, gameObj.flyingMissilesMap);
     checkGetItem(gameObj.AIMap, gameObj.itemsMap, gameObj.airMap, gameObj.flyingMissilesMap);
     addAIs();
@@ -240,7 +239,7 @@ function checkGetItem(playersMap, itemsMap, airMap, flyingMissilesMap) {
 
             // デバッグログ
             if (gameObj.playersMap.has(flyingMissile.emitPlayerId)) {
-                console.log(`${flyingMissile.x},${flyingMissile.y}, ${playerObj.displayName}:${playerObj.x},${playerObj.y}, ${distanceObj.distanceX},${distanceObj.distanceY}`);
+                //console.log(`${flyingMissile.x},${flyingMissile.y}, ${playerObj.displayName}:${playerObj.x},${playerObj.y}, ${distanceObj.distanceX},${distanceObj.distanceY}`);
             }
 
             if (
@@ -249,7 +248,7 @@ function checkGetItem(playersMap, itemsMap, airMap, flyingMissilesMap) {
                 id !== flyingMissile.emitPlayerId
             ) {
                 if (gameObj.playersMap.has(flyingMissile.emitPlayerId)) {
-                    console.log('hit !');// デバッグログ
+                    //console.log('hit !');// デバッグログ
                 }
                 playerObj.isAlive = false;
                 flyingMissilesMap.delete(missileId);
@@ -266,7 +265,7 @@ function checkGetItem(playersMap, itemsMap, airMap, flyingMissilesMap) {
                 }
             } else {
                 if (gameObj.playersMap.has(flyingMissile.emitPlayerId)) {
-                    console.log('nothing.'); // デバッグログ
+                    //console.log('nothing.'); // デバッグログ
                 }
             }
         }

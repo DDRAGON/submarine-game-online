@@ -3633,7 +3633,7 @@ init();
 function init() {
     // 潜水艦の画像
     var submarineImage = new Image();
-    submarineImage.src = '/images/submarine2.png';
+    submarineImage.src = '/images/submarineW.png';
     gameObj.submarineImage = submarineImage;
 
     // ミサイルの画像
@@ -4134,7 +4134,7 @@ function calcDegreeDiffFromRadar(degRader, degItem) {
 }
 
 function calcOpacity(degreeDiff) {
-    degreeDiff = degreeDiff > 320 ? 360 : degreeDiff; // もう少しだけ暗くするコツ
+    degreeDiff = degreeDiff > 330 ? 360 : degreeDiff; // もう少しだけ暗くするコツ
     return (1 - 1 * degreeDiff / 360).toFixed(2);
     //return (1 - 1 * degreeDiff / 180).toFixed(2);
 }

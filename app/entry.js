@@ -31,7 +31,7 @@ init();
 function init() {
     // 潜水艦の画像
     const submarineImage = new Image();
-    submarineImage.src = '/images/submarine2.png';
+    submarineImage.src = '/images/submarineW.png';
     gameObj.submarineImage = submarineImage;
 
     // ミサイルの画像
