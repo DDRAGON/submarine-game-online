@@ -3604,7 +3604,7 @@ var _jquery2 = _interopRequireDefault(_jquery);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-var socket = (0, _socket2.default)('http://localhost:9000');
+var socket = (0, _socket2.default)((0, _jquery2.default)('#main').attr('data-ipAddress'));
 var canvas = (0, _jquery2.default)('#rader')[0];
 canvas.width = 500;
 canvas.height = 500;
