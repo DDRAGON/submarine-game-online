@@ -56,10 +56,6 @@ let deg = 0;
 
 function ticker() {
     if (!gameObj.myPlayerObj) return;
-    if (gameObj.myPlayerObj.isAlive === false && gameObj.myPlayerObj.deadCount > 20) {
-       drawGameOver();
-       //return;
-    }
 
     const playerAndAiMap = new Map(Array.from(gameObj.playersMap).concat(Array.from(gameObj.AIMap)));
 
@@ -72,6 +68,9 @@ function ticker() {
     drawMissiles(ctx2, gameObj.myPlayerObj.missilesMany);
     drawScore(ctx2, gameObj.myPlayerObj.score);
     drawRanking(ctx2, playerAndAiMap);
+    if (gameObj.myPlayerObj.isAlive === false && gameObj.myPlayerObj.deadCount > 20) {
+        drawGameOver();
+    }
     gameObj.missileTimeFlame -= 1;
     gameObj.counter = (gameObj.counter + 1) % 10000;
 }
@@ -92,7 +91,7 @@ function drawGameOver() {
    ctx.font = 'bold 76px arial black';
    ctx.fillStyle = "rgb(0, 220, 250)";
    ctx.fillText('Game Over', 20, 270);
-   ctx.fillStyle = "rgb(0, 0, 0)";
+   ctx.strokeStyle = "rgb(0, 0, 0)";
    ctx.lineWidth = 3;
    ctx.strokeText('Game Over', 20, 270);
 }
