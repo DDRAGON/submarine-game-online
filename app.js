@@ -23,7 +23,7 @@ var game = require('./routes/game');
 passport.use(new Strategy({
       consumerKey: config.twitter.consumerKey,
       consumerSecret: config.twitter.consumerSecret,
-      callbackURL: 'http://localhost:9000/oauth_callback'
+      callbackURL: config.twitter.callbackURL
    },
    function(token, tokenSecret, profile, cb) {
       // In this example, the user's Twitter profile is supplied as the user
