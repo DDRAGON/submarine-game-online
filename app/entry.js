@@ -2,7 +2,7 @@
 import io from 'socket.io-client';
 import $ from 'jquery';
 
-const socket = io('http://localhost:9000');
+const socket = io($('#main').attr('data-ipAddress'));
 const canvas = $('#rader')[0];
 canvas.width = 500;
 canvas.height = 500;

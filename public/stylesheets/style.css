@@ -2,7 +2,11 @@ html {
   overflow: hidden;
 }
 
-body {
+body.top {
+  font: 14px "Lucida Grande", Helvetica, Arial, sans-serif;
+  text-align: center;
+}
+body.game {
   overflow: hidden;
   font: 14px "Lucida Grande", Helvetica, Arial, sans-serif;
   text-align: center;
