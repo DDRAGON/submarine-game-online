@@ -18,7 +18,7 @@ const gameObj = {
     airMap: new Map(),
     itemRadius: 4,
     airRadius: 5,
-    missileTimeFlame: 3,
+    missileTimeFlame: 5,
     fieldWidth: null,
     fieldHeight: null,
     bomCellPx: 32,
@@ -71,6 +71,7 @@ function ticker() {
     if (gameObj.myPlayerObj.isAlive === false && gameObj.myPlayerObj.deadCount > 20) {
         drawGameOver();
     }
+    moveInClient(playerAndAiMap, gameObj.itemsMap, gameObj.airMap, gameObj.myPlayerObj, gameObj.flyingMissilesMap);
     gameObj.missileTimeFlame -= 1;
     gameObj.counter = (gameObj.counter + 1) % 10000;
 }
@@ -574,6 +575,10 @@ function drawRanking(ctx2, playerAndAiMap) {
           10, 220 + (rank * 26)
        );
    }
+}
+
+function moveInClient(playerAndAiMap, itemsMap, airMap, myPlayerObj, flyingMissilesMap) {
+
 }
 
 
