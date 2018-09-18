@@ -237,19 +237,11 @@ function checkGetItem(playersMap, itemsMap, airMap, flyingMissilesMap) {
                playerObj.x, playerObj.y, flyingMissile.x, flyingMissile.y, gameObj.fieldWidth, gameObj.fieldHeight
             );
 
-            // デバッグログ
-            if (gameObj.playersMap.has(flyingMissile.emitPlayerId)) {
-                //console.log(`${flyingMissile.x},${flyingMissile.y}, ${playerObj.displayName}:${playerObj.x},${playerObj.y}, ${distanceObj.distanceX},${distanceObj.distanceY}`);
-            }
-
             if (
                 distanceObj.distanceX <= (submarineImageWidth/2 + gameObj.missileWidth/2) &&
                 distanceObj.distanceY <= (submarineImageWidth/2 + gameObj.missileHeight/2) &&
                 id !== flyingMissile.emitPlayerId
             ) {
-                if (gameObj.playersMap.has(flyingMissile.emitPlayerId)) {
-                    //console.log('hit !');// デバッグログ
-                }
                 playerObj.isAlive = false;
                 flyingMissilesMap.delete(missileId);
 
@@ -262,10 +254,6 @@ function checkGetItem(playersMap, itemsMap, airMap, flyingMissilesMap) {
                     const emitAI = gameObj.AIMap.get(flyingMissile.emitPlayerId);
                     emitAI.score += gameObj.killPoint;
                     gameObj.AIMap.set(flyingMissile.emitPlayerId, emitAI);
-                }
-            } else {
-                if (gameObj.playersMap.has(flyingMissile.emitPlayerId)) {
-                    //console.log('nothing.'); // デバッグログ
                 }
             }
         }
@@ -333,6 +321,11 @@ function newConnection(socketId) {
         playerObj: playerObj,
         fieldWidth: gameObj.fieldWidth,
         fieldHeight: gameObj.fieldHeight,
+        itemPoint: gameObj.itemPoint,
+        addAirTime: gameObj.addAirTime,
+        missileWidth: gameObj.missileWidth,
+        missileHeight: gameObj.missileHeight,
+        missileSpeed: gameObj.missileSpeed
     };
     return startObj;
 }
