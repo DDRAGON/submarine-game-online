@@ -14,7 +14,8 @@ const gameObj = {
     itemTotal: 20,
     airTotal:30,
     itemPoint: 3,
-    killPoint: 500
+    killPoint: 500,
+    counter: 0
 };
 
 init(); // 初期化（初期化はサーバー起動時に行う）
@@ -36,6 +37,7 @@ const gameTicker = setInterval(() => {
     checkGetItem(gameObj.playersMap, gameObj.itemsMap, gameObj.airMap, gameObj.flyingMissilesMap);
     checkGetItem(gameObj.AIMap, gameObj.itemsMap, gameObj.airMap, gameObj.flyingMissilesMap);
     addAIs();
+    gameObj.counter = (gameObj.counter + 1) % 10000;
 }, 33);
 
 function movePlayers(playersMap) { // 潜水艦の移動
@@ -296,7 +298,8 @@ function getMapData() {
         AIMap: Array.from(gameObj.AIMap),
         itemsMap: Array.from(gameObj.itemsMap),
         airMap: Array.from(gameObj.airMap),
-        flyingMissilesMap: Array.from(gameObj.flyingMissilesMap)
+        flyingMissilesMap: Array.from(gameObj.flyingMissilesMap),
+        counter: gameObj.counter
     };
 }
 
@@ -325,7 +328,8 @@ function newConnection(socketId) {
         addAirTime: gameObj.addAirTime,
         missileWidth: gameObj.missileWidth,
         missileHeight: gameObj.missileHeight,
-        missileSpeed: gameObj.missileSpeed
+        missileSpeed: gameObj.missileSpeed,
+        counter: gameObj.counter
     };
     return startObj;
 }

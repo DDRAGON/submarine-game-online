@@ -59,6 +59,9 @@ let deg = 0;
 function ticker() {
     if (!gameObj.myPlayerObj) return;
 
+    if (gameObj.playersMap.has(gameObj.myPlayerObj.socketId)) {
+        gameObj.playersMap.set(gameObj.myPlayerObj.socketId, gameObj.myPlayerObj);
+    }
     const playerAndAiMap = new Map(Array.from(gameObj.playersMap).concat(Array.from(gameObj.AIMap)));
 
     ctx.clearRect(0, 0, canvas.width, canvas.height); // まっさら
@@ -570,6 +573,7 @@ function moveInClient(playerAndAiMap, itemsMap, airMap, myPlayerObj, flyingMissi
 
         // アイテムの取得チェック
         // アイテムのミサイル（赤丸）
+        /*
         for (let [itemKey, itemObj] of itemsMap) {
 
             const distanceObj = calculationBetweenTwoPoints(
@@ -608,6 +612,7 @@ function moveInClient(playerAndAiMap, itemsMap, airMap, myPlayerObj, flyingMissi
                 playerObj.score += gameObj.itemPoint;
             }
         }
+        */
 
         // 撃ち放たれているミサイルの移動
         for (let [missileId, flyingMissile] of flyingMissilesMap) {
@@ -706,7 +711,6 @@ function decreaseAir(playerObj) {
 
 
 socket.on('start data', (startObj) => {
-    gameObj.myPlayerObj   = startObj.playerObj;
     gameObj.fieldWidth    = startObj.fieldWidth;
     gameObj.fieldHeight   = startObj.fieldHeight;
     gameObj.itemPoint     = startObj.itemPoint;
@@ -714,15 +718,19 @@ socket.on('start data', (startObj) => {
     gameObj.missileWidth  = startObj.missileWidth;
     gameObj.missileHeight = startObj.missileHeight;
     gameObj.missileSpeed  = startObj.missileSpeed;
+    gameObj.counter       = startObj.counter;
+    gameObj.myPlayerObj   = startObj.playerObj;
     socket.emit('user data', {displayName: gameObj.myDisplayName, thumbUrl: gameObj.myThumbUrl});
 });
 
 socket.on('map data', (mapData) => {
+    if (gameObj.counter - mapData.counter > 5) { return; } // 古すぎる
     gameObj.playersMap = new Map(mapData.playersMap);
     gameObj.AIMap = new Map(mapData.AIMap);
     gameObj.itemsMap = new Map(mapData.itemsMap);
     gameObj.airMap = new Map(mapData.airMap);
     gameObj.flyingMissilesMap = new Map(mapData.flyingMissilesMap);
+    gameObj.counter = mapData.counter;
     if (gameObj.playersMap.has(gameObj.myPlayerObj.socketId)) {
        gameObj.myPlayerObj = gameObj.playersMap.get(gameObj.myPlayerObj.socketId); // 自分の情報も更新
     }
