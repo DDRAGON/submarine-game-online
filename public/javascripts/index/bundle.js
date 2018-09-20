@@ -3619,6 +3619,7 @@ var gameObj = {
     itemsMap: new Map(),
     airMap: new Map(),
     AIMap: new Map(),
+    flyingMissilesMap: new Map(),
     itemRadius: 4,
     airRadius: 5,
     missileTimeFlame: 5,
@@ -4446,14 +4447,14 @@ socket.on('start data', function (startObj) {
     gameObj.missileWidth = startObj.missileWidth;
     gameObj.missileHeight = startObj.missileHeight;
     gameObj.missileSpeed = startObj.missileSpeed;
+    gameObj.counterMax = startObj.counterMax;
     gameObj.counter = startObj.counter;
     gameObj.myPlayerObj = startObj.playerObj;
     socket.emit('user data', { displayName: gameObj.myDisplayName, thumbUrl: gameObj.myThumbUrl });
 });
 
 socket.on('map data', function (mapData) {
-    console.log(gameObj.counter + ', ' + mapData.counter);
-    if (gameObj.counter - mapData.counter > 5) {
+    if (checkCounterDiff(gameObj.counter, mapData.counter, gameObj.counterMax)) {
         return;
     } // 古すぎる
     gameObj.playersMap = new Map(mapData.playersMap);
@@ -4470,6 +4471,17 @@ socket.on('map data', function (mapData) {
 socket.on('disconnect', function () {
     socket.disconnect();
 });
+
+function checkCounterDiff(clientCounter, serverCounter, counterMax) {
+    var diff = 9999999;
+
+    if (clientCounter >= serverCounter) {
+        diff = clientCounter - serverCounter;
+    } else {
+        diff = clientCounter + counterMax - serverCounter;
+    }
+    return diff > 2;
+}
 
 (0, _jquery2.default)(window).keydown(function (event) {
     if (!gameObj.myPlayerObj || gameObj.myPlayerObj.isAlive === false) return;

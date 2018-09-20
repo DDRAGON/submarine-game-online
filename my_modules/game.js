@@ -15,6 +15,7 @@ const gameObj = {
     airTotal:30,
     itemPoint: 3,
     killPoint: 500,
+    counterMax: 10000,
     counter: 0
 };
 
@@ -37,7 +38,7 @@ const gameTicker = setInterval(() => {
     checkGetItem(gameObj.playersMap, gameObj.itemsMap, gameObj.airMap, gameObj.flyingMissilesMap);
     checkGetItem(gameObj.AIMap, gameObj.itemsMap, gameObj.airMap, gameObj.flyingMissilesMap);
     addAIs();
-    gameObj.counter = (gameObj.counter + 1) % 10000;
+    gameObj.counter = (gameObj.counter + 1) % gameObj.counterMax;
 }, 33);
 
 function movePlayers(playersMap) { // 潜水艦の移動
@@ -329,6 +330,7 @@ function newConnection(socketId) {
         missileWidth: gameObj.missileWidth,
         missileHeight: gameObj.missileHeight,
         missileSpeed: gameObj.missileSpeed,
+        counterMax: gameObj.counterMax,
         counter: gameObj.counter
     };
     return startObj;
