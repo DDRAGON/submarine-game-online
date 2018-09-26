@@ -27,6 +27,7 @@ const gameObj = {
     bomCellPx: 32,
     myDisplayName: $('#main').attr('data-displayName'),
     myThumbUrl: $('#main').attr('data-thumbUrl'),
+    socketKITENAIFlames: 0,
     counter: 0
 };
 
@@ -38,14 +39,16 @@ function init() {
     gameObj.submarineImage = submarineImage;
 
     // ミサイルの画像
-    const missileImage = new Image();
-    missileImage.src = '/images/missile.png';
-    gameObj.missileImage = missileImage;
+    gameObj.missileImage = new Image();
+    gameObj.missileImage.src = '/images/missile.png';
 
     // 爆発の画像集
-    const bomListImage = new Image();
-    bomListImage.src = '/images/bomlist.png';
-    gameObj.bomListImage = bomListImage;
+    gameObj.bomListImage = new Image();
+    gameObj.bomListImage.src = '/images/bomlist.png';
+
+    // Wi-Fi 繋がってないよアイコン
+    gameObj.wifiXImage = new Image();
+    gameObj.wifiXImage.src = '/images/wifix.png';
 
     // Twitter アイコン
     if (gameObj.myThumbUrl && gameObj.myThumbUrl !== 'anonymous') {
@@ -77,8 +80,9 @@ function ticker() {
     if (gameObj.myPlayerObj.isAlive === false && gameObj.myPlayerObj.deadCount > 20) {
         drawGameOver();
     }
-    moveInClient(playerAndAiMap, gameObj.itemsMap, gameObj.airMap, gameObj.myPlayerObj, gameObj.flyingMissilesMap);
+    moveInClient(gameObj.myPlayerObj, gameObj.itemsMap, gameObj.airMap, gameObj.myPlayerObj, gameObj.flyingMissilesMap);
     gameObj.missileTimeFlame -= 1;
+    gameObj.socketKITENAIFlames += 1;
     gameObj.counter = (gameObj.counter + 1) % 10000;
 }
 setInterval(ticker, 33);
@@ -440,8 +444,9 @@ function calcDegreeDiffFromRadar(degRader, degItem) {
 
 
 function calcOpacity(degreeDiff) {
-    degreeDiff = degreeDiff > 330 ? 360 : degreeDiff; // もう少しだけ暗くするコツ
-   return (1 - 1 * degreeDiff / 360).toFixed(2);
+    const deleteDeg = 270;
+    degreeDiff = degreeDiff > deleteDeg ? deleteDeg : degreeDiff; // もう少しだけ暗くするコツ
+    return (1 - degreeDiff / deleteDeg).toFixed(2);
    //return (1 - 1 * degreeDiff / 180).toFixed(2);
 }
 
@@ -451,20 +456,32 @@ const rotationDegreeByDirection = {
 function drawSubmarine(ctx, myPlayerObj){
     if (myPlayerObj.isAlive === true) {
 
-        const rotationDegree = rotationDegreeByDirection[myPlayerObj.direction];
 
-        ctx.save();
-        ctx.translate(canvas.width / 2, canvas.height / 2);
-        ctx.rotate(getRadian(rotationDegree));
-        if (myPlayerObj.direction === 'left') {
-            ctx.scale(-1, 1);
+        if (gameObj.socketKITENAIFlames < 10) {
+            const rotationDegree = rotationDegreeByDirection[myPlayerObj.direction];
+
+            ctx.save();
+            ctx.translate(canvas.width / 2, canvas.height / 2);
+            ctx.rotate(getRadian(rotationDegree));
+            if (myPlayerObj.direction === 'left') {
+                ctx.scale(-1, 1);
+            }
+            ctx.drawImage(
+                gameObj.submarineImage,
+                -(gameObj.submarineImage.width / 2),
+                -(gameObj.submarineImage.height / 2)
+            );
+            ctx.restore();
+
+        } else {
+            if (gameObj.socketKITENAIFlames % 10 !== 0) { // 点滅処理
+                ctx.drawImage(
+                    gameObj.wifiXImage,
+                    canvas.width / 2  - (gameObj.wifiXImage.width / 2),
+                    canvas.height / 2 - (gameObj.wifiXImage.height / 2)
+                );
+            }
         }
-        ctx.drawImage(
-            gameObj.submarineImage,
-            -(gameObj.submarineImage.width / 2),
-            -(gameObj.submarineImage.height / 2)
-        );
-        ctx.restore();
 
         if (gameObj.myDisplayName) {
            const rectWidth = gameObj.submarineImage.width - 28;
@@ -561,115 +578,114 @@ function drawRanking(ctx2, playerAndAiMap) {
    }
 }
 
-function moveInClient(playerAndAiMap, itemsMap, airMap, myPlayerObj, flyingMissilesMap) {
-    // プレーヤーと AI の移動
-    for (let [id, playerObj] of playerAndAiMap) {
+function moveInClient(playerObj, itemsMap, airMap, myPlayerObj, flyingMissilesMap) {
 
-        if (playerObj.isAlive === false) {
-            if (playerObj.deadCount < 60) {
-                playerObj.deadCount += 1;
-            }
-            continue;
+    if (playerObj.isAlive === false) {
+        if (playerObj.deadCount < 60) {
+            playerObj.deadCount += 1;
         }
+        return;
+    }
 
-        // アイテムの取得チェック
-        // アイテムのミサイル（赤丸）
-        /*
-        for (let [itemKey, itemObj] of itemsMap) {
+    // アイテムの取得チェック
+    // アイテムのミサイル（赤丸）
+    /*
+    for (let [itemKey, itemObj] of itemsMap) {
 
-            const distanceObj = calculationBetweenTwoPoints(
-                playerObj.x, playerObj.y, itemObj.x, itemObj.y, gameObj.fieldWidth, gameObj.fieldHeight
-            );
+        const distanceObj = calculationBetweenTwoPoints(
+            playerObj.x, playerObj.y, itemObj.x, itemObj.y, gameObj.fieldWidth, gameObj.fieldHeight
+        );
 
-            if (
-                distanceObj.distanceX <= (gameObj.submarineImage.width/2 + gameObj.itemRadius) &&
-                distanceObj.distanceY <= (gameObj.submarineImage.width/2 + gameObj.itemRadius)
-            ) { // got item!
+        if (
+            distanceObj.distanceX <= (gameObj.submarineImage.width/2 + gameObj.itemRadius) &&
+            distanceObj.distanceY <= (gameObj.submarineImage.width/2 + gameObj.itemRadius)
+        ) { // got item!
 
-                gameObj.itemsMap.delete(itemKey);
-                playerObj.missilesMany = playerObj.missilesMany > 5 ? 6 : playerObj.missilesMany + 1;
-                playerObj.score += gameObj.itemPoint;
-            }
+            gameObj.itemsMap.delete(itemKey);
+            playerObj.missilesMany = playerObj.missilesMany > 5 ? 6 : playerObj.missilesMany + 1;
+            playerObj.score += gameObj.itemPoint;
         }
+    }
 
-        // アイテムの空気（青丸）
-        for (let [airKey, airObj] of airMap) {
+    // アイテムの空気（青丸）
+    for (let [airKey, airObj] of airMap) {
 
-            const distanceObj = calculationBetweenTwoPoints(
-                playerObj.x, playerObj.y, airObj.x, airObj.y, gameObj.fieldWidth, gameObj.fieldHeight
-            );
+        const distanceObj = calculationBetweenTwoPoints(
+            playerObj.x, playerObj.y, airObj.x, airObj.y, gameObj.fieldWidth, gameObj.fieldHeight
+        );
 
-            if (
-                distanceObj.distanceX <= (gameObj.submarineImage.width/2 + gameObj.airRadius) &&
-                distanceObj.distanceY <= (gameObj.submarineImage.width/2 + gameObj.airRadius)
-            ) { // got air!
+        if (
+            distanceObj.distanceX <= (gameObj.submarineImage.width/2 + gameObj.airRadius) &&
+            distanceObj.distanceY <= (gameObj.submarineImage.width/2 + gameObj.airRadius)
+        ) { // got air!
 
-                gameObj.airMap.delete(airKey);
-                if (playerObj.airTime + gameObj.addAirTime > 99) {
-                    playerObj.airTime = 99;
-                } else {
-                    playerObj.airTime += gameObj.addAirTime;
-                }
-                playerObj.score += gameObj.itemPoint;
+            gameObj.airMap.delete(airKey);
+            if (playerObj.airTime + gameObj.addAirTime > 99) {
+                playerObj.airTime = 99;
+            } else {
+                playerObj.airTime += gameObj.addAirTime;
             }
+            playerObj.score += gameObj.itemPoint;
         }
-        */
+    }
+    */
 
-        // 撃ち放たれているミサイルの移動
-        for (let [missileId, flyingMissile] of flyingMissilesMap) {
+    /*
+        // 撃ち放たれているミサイルの当たり判定
+    for (let [missileId, flyingMissile] of flyingMissilesMap) {
 
-            const distanceObj = calculationBetweenTwoPoints(
-                playerObj.x, playerObj.y, flyingMissile.x, flyingMissile.y, gameObj.fieldWidth, gameObj.fieldHeight
-            );
+        const distanceObj = calculationBetweenTwoPoints(
+            playerObj.x, playerObj.y, flyingMissile.x, flyingMissile.y, gameObj.fieldWidth, gameObj.fieldHeight
+        );
 
-            if (
-                distanceObj.distanceX <= (gameObj.submarineImage.width/2 + gameObj.missileWidth/2) &&
-                distanceObj.distanceY <= (gameObj.submarineImage.width/2 + gameObj.missileHeight/2) &&
-                id !== flyingMissile.emitPlayerId
-            ) {
-                playerObj.isAlive = false;
-                gameObj.flyingMissilesMap.delete(missileId);
+        if (
+            distanceObj.distanceX <= (gameObj.submarineImage.width/2 + gameObj.missileWidth/2) &&
+            distanceObj.distanceY <= (gameObj.submarineImage.width/2 + gameObj.missileHeight/2) &&
+            playerObj.socketId !== flyingMissile.emitPlayerId
+        ) {
+            playerObj.isAlive = false;
+            gameObj.flyingMissilesMap.delete(missileId);
 
-                // 得点の更新
-                if (gameObj.playersMap.has(flyingMissile.emitPlayerId)) {
-                    const emitPlayer = gameObj.playersMap.get(flyingMissile.emitPlayerId);
-                    emitPlayer.score += gameObj.killPoint;
-                    gameObj.playersMap.set(flyingMissile.emitPlayerId, emitPlayer);
-                } else if (gameObj.AIMap.has(flyingMissile.emitPlayerId)) {
-                    const emitAI = gameObj.AIMap.get(flyingMissile.emitPlayerId);
-                    emitAI.score += gameObj.killPoint;
-                    gameObj.AIMap.set(flyingMissile.emitPlayerId, emitAI);
-                }
+            // 得点の更新
+            if (gameObj.playersMap.has(flyingMissile.emitPlayerId)) {
+                const emitPlayer = gameObj.playersMap.get(flyingMissile.emitPlayerId);
+                emitPlayer.score += gameObj.killPoint;
+                gameObj.playersMap.set(flyingMissile.emitPlayerId, emitPlayer);
+            } else if (gameObj.AIMap.has(flyingMissile.emitPlayerId)) {
+                const emitAI = gameObj.AIMap.get(flyingMissile.emitPlayerId);
+                emitAI.score += gameObj.killPoint;
+                gameObj.AIMap.set(flyingMissile.emitPlayerId, emitAI);
             }
         }
+    }
+    */
 
-        // 移動
-        switch (playerObj.direction) {
-            case 'left':
-                playerObj.x -= 1;
-                break;
-            case 'up':
-                playerObj.y -= 1;
-                break;
-            case 'down':
-                playerObj.y += 1;
-                break;
-            case 'right':
-                playerObj.x += 1;
-                break;
-        }
-        if (playerObj.x > gameObj.fieldWidth) playerObj.x -= gameObj.fieldWidth;
-        if (playerObj.x < 0) playerObj.x += gameObj.fieldWidth;
-        if (playerObj.y < 0) playerObj.y += gameObj.fieldHeight;
-        if (playerObj.y > gameObj.fieldHeight) playerObj.y -= gameObj.fieldHeight;
+    // 移動
+    switch (playerObj.direction) {
+        case 'left':
+            playerObj.x -= 1;
+            break;
+        case 'up':
+            playerObj.y -= 1;
+            break;
+        case 'down':
+            playerObj.y += 1;
+            break;
+        case 'right':
+            playerObj.x += 1;
+            break;
+    }
+    if (playerObj.x > gameObj.fieldWidth) playerObj.x -= gameObj.fieldWidth;
+    if (playerObj.x < 0) playerObj.x += gameObj.fieldWidth;
+    if (playerObj.y < 0) playerObj.y += gameObj.fieldHeight;
+    if (playerObj.y > gameObj.fieldHeight) playerObj.y -= gameObj.fieldHeight;
 
-        playerObj.aliveTime.clock += 1;
-        if (playerObj.aliveTime.clock === 30) {
-            playerObj.aliveTime.clock = 0;
-            playerObj.aliveTime.seconds += 1;
-            decreaseAir(playerObj);
-            playerObj.score += 1;
-        }
+    playerObj.aliveTime.clock += 1;
+    if (playerObj.aliveTime.clock === 30) {
+        playerObj.aliveTime.clock = 0;
+        playerObj.aliveTime.seconds += 1;
+        decreaseAir(playerObj);
+        playerObj.score += 1;
     }
 
     // 飛んでいるミサイルの移動
@@ -736,6 +752,7 @@ socket.on('map data', (mapData) => {
     if (gameObj.playersMap.has(gameObj.myPlayerObj.socketId)) {
        gameObj.myPlayerObj = gameObj.playersMap.get(gameObj.myPlayerObj.socketId); // 自分の情報も更新
     }
+    gameObj.socketKITENAIFlames = 0;
 });
 
 socket.on('disconnect', () => {
