@@ -4134,18 +4134,18 @@ var rotationDegreeByDirection = {
 function drawSubmarine(ctx, myPlayerObj) {
     if (myPlayerObj.isAlive === true) {
 
-        if (gameObj.socketKITENAIFlames < 10) {
-            var rotationDegree = rotationDegreeByDirection[myPlayerObj.direction];
+        var rotationDegree = rotationDegreeByDirection[myPlayerObj.direction];
 
-            ctx.save();
-            ctx.translate(canvas.width / 2, canvas.height / 2);
-            ctx.rotate(getRadian(rotationDegree));
-            if (myPlayerObj.direction === 'left') {
-                ctx.scale(-1, 1);
-            }
-            ctx.drawImage(gameObj.submarineImage, -(gameObj.submarineImage.width / 2), -(gameObj.submarineImage.height / 2));
-            ctx.restore();
-        } else {
+        ctx.save();
+        ctx.translate(canvas.width / 2, canvas.height / 2);
+        ctx.rotate(getRadian(rotationDegree));
+        if (myPlayerObj.direction === 'left') {
+            ctx.scale(-1, 1);
+        }
+        ctx.drawImage(gameObj.submarineImage, -(gameObj.submarineImage.width / 2), -(gameObj.submarineImage.height / 2));
+        ctx.restore();
+
+        if (gameObj.socketKITENAIFlames > 12) {
             if (gameObj.socketKITENAIFlames % 10 !== 0) {
                 // 点滅処理
                 ctx.drawImage(gameObj.wifiXImage, canvas.width / 2 - gameObj.wifiXImage.width / 2, canvas.height / 2 - gameObj.wifiXImage.height / 2);
