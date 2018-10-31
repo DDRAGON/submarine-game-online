@@ -1,7 +1,7 @@
 function createWebSocketServer(io, game) {
 
     const rootIo = io.of('/');
-    rootIo.on('connection', function (socket) {
+    rootIo.on('connection', function(socket) {
         const startObj = game.newConnection(socket.id);
 
         socket.emit('start data', startObj);
@@ -24,8 +24,12 @@ function createWebSocketServer(io, game) {
     });
 
     const socketTicker = setInterval(() => {
-        rootIo.emit('map data', game.getMapData()); // 全員に送信
-    }, 33);
+            game.getMapData().then((result) => {
+                //console.log(result);
+                rootIo.emit('map data', result); // 全員に送信
+            });
+        },
+        33);
 }
 
 module.exports = {

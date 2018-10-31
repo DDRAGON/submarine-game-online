@@ -1,3 +1,5 @@
+const zlib = require('zlib');
+
 const gameObj = {
     playersMap: new Map(),
     itemsMap: new Map(),
@@ -10,9 +12,9 @@ const gameObj = {
     missileHeight: 30,
     fieldWidth: 1000,
     fieldHeight: 1000,
-    addingAiPlayerNum: 10,
-    itemTotal: 20,
-    airTotal:30,
+    addingAiPlayerNum: 9,
+    itemTotal: 15,
+    airTotal: 10,
     itemPoint: 3,
     killPoint: 500,
     counterMax: 10000,
@@ -48,7 +50,7 @@ function movePlayers(playersMap) { // 潜水艦の移動
             if (value.deadCount < 60) {
                 value.deadCount += 1;
             } else {
-               gameObj.playersMap.delete(key);
+                gameObj.playersMap.delete(key);
             }
             continue;
         }
@@ -83,52 +85,53 @@ function movePlayers(playersMap) { // 潜水艦の移動
 }
 
 function moveAIs(AIMap) {
-   for (let [key, value] of AIMap) {
+    for (let [key, value] of AIMap) {
 
-      if (value.isAlive === false) {
-         if (value.deadCount < 60) {
-            value.deadCount += 1;
-         } else {
-            gameObj.AIMap.delete(key);
-         }
-         continue;
-      }
+        if (value.isAlive === false) {
+            if (value.deadCount < 60) {
+                value.deadCount += 1;
+            } else {
+                gameObj.AIMap.delete(key);
+            }
+            continue;
+        }
 
-      switch (value.direction) {
-         case 'left':
-            value.x -= 1;
-            break;
-         case 'up':
-            value.y -= 1;
-            break;
-         case 'down':
-            value.y += 1;
-            break;
-         case 'right':
-            value.x += 1;
-            break;
-      }
-      if (value.x > gameObj.fieldWidth) value.x -= gameObj.fieldWidth;
-      if (value.x < 0) value.x += gameObj.fieldWidth;
-      if (value.y < 0) value.y += gameObj.fieldHeight;
-      if (value.y > gameObj.fieldHeight) value.y -= gameObj.fieldHeight;
+        switch (value.direction) {
+            case 'left':
+                value.x -= 1;
+                break;
+            case 'up':
+                value.y -= 1;
+                break;
+            case 'down':
+                value.y += 1;
+                break;
+            case 'right':
+                value.x += 1;
+                break;
+        }
+        if (value.x > gameObj.fieldWidth) value.x -= gameObj.fieldWidth;
+        if (value.x < 0) value.x += gameObj.fieldWidth;
+        if (value.y < 0) value.y += gameObj.fieldHeight;
+        if (value.y > gameObj.fieldHeight) value.y -= gameObj.fieldHeight;
 
-      value.aliveTime.clock += 1;
-      if (value.aliveTime.clock === 30) {
-         value.aliveTime.clock = 0;
-         value.aliveTime.seconds += 1;
-         decreaseAir(value);
-         value.score += 1;
-      }
-   }
+        value.aliveTime.clock += 1;
+        if (value.aliveTime.clock === 30) {
+            value.aliveTime.clock = 0;
+            value.aliveTime.seconds += 1;
+            decreaseAir(value);
+            value.score += 1;
+        }
+    }
 }
 
 
 const directions = ['left', 'up', 'down', 'right'];
+
 function AIMoveDecision(AIMap) {
     for (let [key, ai] of AIMap) {
 
-        switch(ai.level) {
+        switch (ai.level) {
             case 1:
                 if (Math.floor(Math.random() * 60) === 1) {
                     ai.direction = directions[Math.floor(Math.random() * directions.length)];
@@ -187,6 +190,7 @@ const submarineImageWidth = 42;
 const itemRadius = 4;
 const airRadius = 6;
 const addAirTime = 30;
+
 function checkGetItem(playersMap, itemsMap, airMap, flyingMissilesMap) {
     for (let [id, playerObj] of playersMap) {
         if (playerObj.isAlive === false) { continue; }
@@ -195,12 +199,12 @@ function checkGetItem(playersMap, itemsMap, airMap, flyingMissilesMap) {
         for (let [itemKey, itemObj] of itemsMap) {
 
             const distanceObj = calculationBetweenTwoPoints(
-               playerObj.x, playerObj.y, itemObj.x, itemObj.y, gameObj.fieldWidth, gameObj.fieldHeight
+                playerObj.x, playerObj.y, itemObj.x, itemObj.y, gameObj.fieldWidth, gameObj.fieldHeight
             );
 
             if (
-                distanceObj.distanceX <= (submarineImageWidth/2 + itemRadius) &&
-                distanceObj.distanceY <= (submarineImageWidth/2 + itemRadius)
+                distanceObj.distanceX <= (submarineImageWidth / 2 + itemRadius) &&
+                distanceObj.distanceY <= (submarineImageWidth / 2 + itemRadius)
             ) { // got item!
 
                 gameObj.itemsMap.delete(itemKey);
@@ -214,12 +218,12 @@ function checkGetItem(playersMap, itemsMap, airMap, flyingMissilesMap) {
         for (let [airKey, airObj] of airMap) {
 
             const distanceObj = calculationBetweenTwoPoints(
-               playerObj.x, playerObj.y, airObj.x, airObj.y, gameObj.fieldWidth, gameObj.fieldHeight
+                playerObj.x, playerObj.y, airObj.x, airObj.y, gameObj.fieldWidth, gameObj.fieldHeight
             );
 
             if (
-                distanceObj.distanceX <= (submarineImageWidth/2 + airRadius) &&
-                distanceObj.distanceY <= (submarineImageWidth/2 + airRadius)
+                distanceObj.distanceX <= (submarineImageWidth / 2 + airRadius) &&
+                distanceObj.distanceY <= (submarineImageWidth / 2 + airRadius)
             ) { // got air!
 
                 gameObj.airMap.delete(airKey);
@@ -237,12 +241,12 @@ function checkGetItem(playersMap, itemsMap, airMap, flyingMissilesMap) {
         for (let [missileId, flyingMissile] of flyingMissilesMap) {
 
             const distanceObj = calculationBetweenTwoPoints(
-               playerObj.x, playerObj.y, flyingMissile.x, flyingMissile.y, gameObj.fieldWidth, gameObj.fieldHeight
+                playerObj.x, playerObj.y, flyingMissile.x, flyingMissile.y, gameObj.fieldWidth, gameObj.fieldHeight
             );
 
             if (
-                distanceObj.distanceX <= (submarineImageWidth/2 + gameObj.missileWidth/2) &&
-                distanceObj.distanceY <= (submarineImageWidth/2 + gameObj.missileHeight/2) &&
+                distanceObj.distanceX <= (submarineImageWidth / 2 + gameObj.missileWidth / 2) &&
+                distanceObj.distanceY <= (submarineImageWidth / 2 + gameObj.missileHeight / 2) &&
                 id !== flyingMissile.emitPlayerId
             ) {
                 playerObj.isAlive = false;
@@ -271,7 +275,7 @@ function addAIs() {
 
             const playerX = Math.floor(Math.random() * gameObj.fieldWidth);
             const playerY = Math.floor(Math.random() * gameObj.fieldHeight);
-            const level   = Math.floor(Math.random() * 1) + 1;
+            const level = Math.floor(Math.random() * 1) + 1;
             const id = Math.floor(Math.random() * 100000) + ',' + playerX + ',' + playerY + ',' + level;
             const playerObj = {
                 x: playerX,
@@ -281,12 +285,12 @@ function addAIs() {
                 direction: 'right',
                 missilesMany: 0,
                 airTime: 99,
-                aliveTime: {'clock': 0, 'seconds': 0},
+                aliveTime: { 'clock': 0, 'seconds': 0 },
                 score: 0,
                 level: level,
                 displayName: 'CPU',
                 thumbUrl: 'CPU',
-                id : id
+                id: id
             };
             gameObj.AIMap.set(id, playerObj);
         }
@@ -294,7 +298,7 @@ function addAIs() {
 }
 
 function getMapData() {
-    return {
+    const mapData = {
         playersMap: Array.from(gameObj.playersMap),
         AIMap: Array.from(gameObj.AIMap),
         itemsMap: Array.from(gameObj.itemsMap),
@@ -302,6 +306,8 @@ function getMapData() {
         flyingMissilesMap: Array.from(gameObj.flyingMissilesMap),
         counter: gameObj.counter
     };
+
+    return compressObject(mapData);
 }
 
 function newConnection(socketId) {
@@ -315,7 +321,7 @@ function newConnection(socketId) {
         direction: 'right',
         missilesMany: 0,
         airTime: 99,
-        aliveTime: {'clock': 0, 'seconds': 0},
+        aliveTime: { 'clock': 0, 'seconds': 0 },
         score: 0,
         socketId: socketId
     };
@@ -416,51 +422,77 @@ function addAir() {
 }
 
 function calculationBetweenTwoPoints(pX, pY, oX, oY, gameWidth, gameHeight) {
-   let distanceX = 99999999;
-   let distanceY = 99999999;
+    let distanceX = 99999999;
+    let distanceY = 99999999;
 
-   if (pX <= oX) {
-      // 右から
-      distanceX = oX - pX;
-      // 左から
-      let tmpDistance = pX + gameWidth - oX;
-      if (distanceX > tmpDistance) {
-         distanceX = tmpDistance;
-      }
+    if (pX <= oX) {
+        // 右から
+        distanceX = oX - pX;
+        // 左から
+        let tmpDistance = pX + gameWidth - oX;
+        if (distanceX > tmpDistance) {
+            distanceX = tmpDistance;
+        }
 
-   } else {
-      // 右から
-      distanceX = pX - oX;
-      // 左から
-      let tmpDistance = oX + gameWidth - pX;
-      if (distanceX > tmpDistance) {
-         distanceX = tmpDistance;
-      }
-   }
+    } else {
+        // 右から
+        distanceX = pX - oX;
+        // 左から
+        let tmpDistance = oX + gameWidth - pX;
+        if (distanceX > tmpDistance) {
+            distanceX = tmpDistance;
+        }
+    }
 
-   if (pY <= oY) {
-      // 下から
-      distanceY = oY - pY;
-      // 上から
-      let tmpDistance = pY + gameHeight - oY;
-      if (distanceY > tmpDistance) {
-         distanceY = tmpDistance;
-      }
+    if (pY <= oY) {
+        // 下から
+        distanceY = oY - pY;
+        // 上から
+        let tmpDistance = pY + gameHeight - oY;
+        if (distanceY > tmpDistance) {
+            distanceY = tmpDistance;
+        }
 
-   } else {
-      // 上から
-      distanceY = pY - oY;
-      // 下から
-      let tmpDistance = oY + gameHeight - pY;
-      if (distanceY > tmpDistance) {
-         distanceY = tmpDistance;
-      }
-   }
+    } else {
+        // 上から
+        distanceY = pY - oY;
+        // 下から
+        let tmpDistance = oY + gameHeight - pY;
+        if (distanceY > tmpDistance) {
+            distanceY = tmpDistance;
+        }
+    }
 
-   return {
-      distanceX,
-      distanceY
-   };
+    return {
+        distanceX,
+        distanceY
+    };
+}
+
+function compressObject(obj) {
+    return new Promise((resolve, reject) => {
+        const jsonText = JSON.stringify(obj);
+        zlib.deflate(jsonText, (err, buffer) => {
+            if (!err) {
+                //resolve(buffer);
+                resolve(buffer.toString('base64'));
+            } else {
+                console.log(err);
+                reject(err);
+            }
+        });
+    });
+}
+
+function restore(compressed) {
+    const buffer = Buffer.from(compressed, 'base64');
+    zlib.unzip(buffer, (err, buffer) => {
+        if (!err) {
+            return JSON.parse(buffer.toString());
+        } else {
+            console.log(err);
+        }
+    });
 }
 
 
