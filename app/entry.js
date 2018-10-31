@@ -748,6 +748,7 @@ socket.on('start data', (startObj) => {
 });
 
 socket.on('map data', (compressed) => {
+    console.log(compressed);
     restore(compressed).then((mapData) => {
         if (checkCounterDiff(gameObj.counter, mapData.counter, gameObj.counterMax)) { return; } // 古すぎる
         gameObj.playersMap = new Map(mapData.playersMap);
@@ -759,8 +760,8 @@ socket.on('map data', (compressed) => {
         if (gameObj.playersMap.has(gameObj.myPlayerObj.socketId)) {
             gameObj.myPlayerObj = gameObj.playersMap.get(gameObj.myPlayerObj.socketId); // 自分の情報も更新
         }
-        gameObj.socketKITENAIFlames = 0;
     });
+    gameObj.socketKITENAIFlames = 0;
 });
 
 socket.on('disconnect', () => {
@@ -776,7 +777,8 @@ function checkCounterDiff(clientCounter, serverCounter, counterMax) {
     } else {
         diff = clientCounter + counterMax - serverCounter;
     }
-    return diff > 5;
+    //return diff > 5;
+    return false;
 }
 
 
