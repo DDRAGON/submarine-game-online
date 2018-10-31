@@ -776,7 +776,7 @@ function checkCounterDiff(clientCounter, serverCounter, counterMax) {
     } else {
         diff = clientCounter + counterMax - serverCounter;
     }
-    return diff > 2;
+    return diff > 5;
 }
 
 
