@@ -10158,7 +10158,7 @@ function drawMap(ctx, playerAndAiMap, itemsMap, airMap, myPlayerObj, flyingMissi
                     var drawRadius2 = gameObj.counter % 12 + 2;
                     var clearRadius2 = drawRadius2 - 2;
 
-                    ctx.fillStyle = 'rgba(255, 0, 0, ' + toumeido + ')';
+                    ctx.fillStyle = 'rgba(0, 0, 255, ' + toumeido + ')';
                     ctx.beginPath();
                     ctx.arc(distanceObj.drawX, distanceObj.drawY, drawRadius, 0, Math.PI * 2, true);
                     ctx.fill();
@@ -10168,7 +10168,7 @@ function drawMap(ctx, playerAndAiMap, itemsMap, airMap, myPlayerObj, flyingMissi
                     ctx.arc(distanceObj.drawX, distanceObj.drawY, clearRadius, 0, Math.PI * 2, true);
                     ctx.fill();
 
-                    ctx.fillStyle = 'rgba(255, 0, 0, ' + toumeido + ')';
+                    ctx.fillStyle = 'rgba(0, 0, 255, ' + toumeido + ')';
                     ctx.beginPath();
                     ctx.arc(distanceObj.drawX, distanceObj.drawY, drawRadius2, 0, Math.PI * 2, true);
                     ctx.fill();
@@ -10803,7 +10803,6 @@ socket.on('start data', function (startObj) {
 });
 
 socket.on('map data', function (compressed) {
-    console.log(compressed);
     restore(compressed).then(function (mapData) {
         if (checkCounterDiff(gameObj.counter, mapData.counter, gameObj.counterMax)) {
             return;
