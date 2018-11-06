@@ -298,16 +298,19 @@ function addAIs() {
 }
 
 function getMapData() {
+    const mapData = createMapDataForSend(gameObj.playersMap, gameObj.AIMap, gameObj.itemsMap, gameObj.airMap, gameObj.flyingMissilesMap);
+    /*
     const mapData = {
         playersMap: Array.from(gameObj.playersMap),
         AIMap: Array.from(gameObj.AIMap),
         itemsMap: Array.from(gameObj.itemsMap),
         airMap: Array.from(gameObj.airMap),
-        flyingMissilesMap: Array.from(gameObj.flyingMissilesMap),
-        counter: gameObj.counter
+        flyingMissilesMap: Array.from(gameObj.flyingMissilesMap)
     };
+    */
 
-    return compressObject(mapData);
+    //return compressObject(mapData);
+    return mapData;
 }
 
 function newConnection(socketId) {
@@ -493,6 +496,77 @@ function restore(compressed) {
             console.log(err);
         }
     });
+}
+
+function createMapDataForSend(playersMap, AIMap, itemsMap, airMap, flyingMissilesMap) {
+
+    const playersArray = [];
+    const aiArray = [];
+    const itemsArray = [];
+    const airArray = [];
+    const flyingMissilesArray = [];
+
+    for(let [playerId, plyer] of playersMap) {
+        const playerDataForSend = [];
+
+        playerDataForSend.push(plyer.x);
+        playerDataForSend.push(plyer.y);
+        playerDataForSend.push(plyer.displayName);
+        playerDataForSend.push(plyer.score);
+        playerDataForSend.push(plyer.isAlive);
+        playerDataForSend.push(plyer.deadCount);
+        playerDataForSend.push(plyer.direction);
+        playerDataForSend.push(plyer.missilesMany);
+        playerDataForSend.push(plyer.airTime);
+        playerDataForSend.push(plyer.socketId);
+
+        playersArray.push(playerDataForSend);
+    }
+
+    for(let [aiId, ai] of AIMap) {
+        const aiDataForSend = [];
+
+        aiDataForSend.push(ai.x);
+        aiDataForSend.push(ai.y);
+        aiDataForSend.push(ai.displayName);
+        aiDataForSend.push(ai.score);
+        aiDataForSend.push(ai.isAlive);
+        aiDataForSend.push(ai.deadCount);
+        aiDataForSend.push(ai.id);
+
+        aiArray.push(aiDataForSend);
+    }
+
+    for (let [id, item] of itemsMap) {
+        const itemDataForSend = [];
+
+        itemDataForSend.push(item.x);
+        itemDataForSend.push(item.y);
+
+        itemsArray.push(itemDataForSend);
+    }
+
+    for (let [id, air] of airMap) {
+        const airDataForSend = [];
+
+        airDataForSend.push(air.x);
+        airDataForSend.push(air.y);
+
+        airArray.push(airDataForSend);
+    }
+
+    for (let [id, flyingMissile] of flyingMissilesMap) {
+        const flyingMissileDataForSend = [];
+
+        flyingMissileDataForSend.push(flyingMissile.x);
+        flyingMissileDataForSend.push(flyingMissile.y);
+        flyingMissileDataForSend.push(flyingMissile.direction);
+        flyingMissileDataForSend.push(flyingMissile.emitPlayerId);
+
+        flyingMissilesArray.push(flyingMissileDataForSend);
+    }
+
+    return [playersArray, aiArray, itemsArray, airArray, flyingMissilesArray];
 }
 
 

@@ -748,6 +748,86 @@ socket.on('start data', (startObj) => {
 });
 
 socket.on('map data', (compressed) => {
+
+    const playersArray = compressed[0];
+    const aiArray = compressed[1];
+    const itemsArray = compressed[2];
+    const airArray = compressed[3];
+    const flyingMissilesArray = compressed[4];
+
+    gameObj.playersMap = new Map();
+    for (let compressedPlayerData of playersArray) {
+        const socketId = compressedPlayerData[9];
+
+        const player = {};
+        player.x            = compressedPlayerData[0];
+        player.y            = compressedPlayerData[1];
+        player.displayName  = compressedPlayerData[2];
+        player.score        = compressedPlayerData[3];
+        player.isAlive      = compressedPlayerData[4];
+        player.deadCount    = compressedPlayerData[5];
+        player.direction    = compressedPlayerData[6];
+        player.missilesMany = compressedPlayerData[7];
+        player.airTime      = compressedPlayerData[8];
+
+        gameObj.playersMap.set(socketId, player);
+
+        // 自分の情報も更新
+        if (socketId === gameObj.myPlayerObj.socketId) {
+            gameObj.myPlayerObj.x            = compressedPlayerData[0];
+            gameObj.myPlayerObj.y            = compressedPlayerData[1];
+            gameObj.myPlayerObj.displayName  = compressedPlayerData[2];
+            gameObj.myPlayerObj.score        = compressedPlayerData[3];
+            gameObj.myPlayerObj.isAlive      = compressedPlayerData[4];
+            gameObj.myPlayerObj.deadCount    = compressedPlayerData[5];
+            gameObj.myPlayerObj.direction    = compressedPlayerData[6];
+            gameObj.myPlayerObj.missilesMany = compressedPlayerData[7];
+            gameObj.myPlayerObj.airTime      = compressedPlayerData[8];
+        }
+    }
+
+    gameObj.AIMap = new Map();
+    for (let compressedAiData of aiArray) {
+        const id = compressedAiData[6];
+
+        const ai = {};
+        ai.x           = compressedAiData[0];
+        ai.y           = compressedAiData[1];
+        ai.displayName = compressedAiData[2];
+        ai.score       = compressedAiData[3];
+        ai.isAlive     = compressedAiData[4];
+        ai.deadCount   = compressedAiData[5];
+
+        gameObj.AIMap.set(id, ai);
+    }
+
+    gameObj.itemsMap = new Map();
+    let counter = 1;
+    for (let compressedItemData of itemsArray) {
+        gameObj.itemsMap.set(counter, {x: compressedItemData[0], y: compressedItemData[1]});
+        counter++;
+    }
+
+    gameObj.airMap = new Map();
+    counter = 1;
+    for (let compressedAirData of airArray) {
+        gameObj.airMap.set(counter, {x: compressedAirData[0], y: compressedAirData[1]});
+        counter++;
+    }
+
+    gameObj.flyingMissilesMap = new Map();
+    counter = 1;
+    for (let compressedflyingMissileData of flyingMissilesArray) {
+        gameObj.flyingMissilesMap.set(counter, {
+            x: compressedflyingMissileData[0],
+            y: compressedflyingMissileData[1],
+            direction: compressedflyingMissileData[2],
+            emitPlayerId: compressedflyingMissileData[3]
+        });
+        counter++;
+    }
+
+    /*
     restore(compressed).then((mapData) => {
         if (checkCounterDiff(gameObj.counter, mapData.counter, gameObj.counterMax)) { return; } // 古すぎる
         gameObj.playersMap = new Map(mapData.playersMap);
@@ -760,6 +840,7 @@ socket.on('map data', (compressed) => {
             gameObj.myPlayerObj = gameObj.playersMap.get(gameObj.myPlayerObj.socketId); // 自分の情報も更新
         }
     });
+    */
     gameObj.socketKITENAIFlames = 0;
 });
 

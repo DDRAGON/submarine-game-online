@@ -10803,20 +10803,205 @@ socket.on('start data', function (startObj) {
 });
 
 socket.on('map data', function (compressed) {
-    restore(compressed).then(function (mapData) {
-        if (checkCounterDiff(gameObj.counter, mapData.counter, gameObj.counterMax)) {
-            return;
-        } // 古すぎる
-        gameObj.playersMap = new Map(mapData.playersMap);
-        gameObj.AIMap = new Map(mapData.AIMap);
-        gameObj.itemsMap = new Map(mapData.itemsMap);
-        gameObj.airMap = new Map(mapData.airMap);
-        gameObj.flyingMissilesMap = new Map(mapData.flyingMissilesMap);
-        gameObj.counter = mapData.counter;
-        if (gameObj.playersMap.has(gameObj.myPlayerObj.socketId)) {
-            gameObj.myPlayerObj = gameObj.playersMap.get(gameObj.myPlayerObj.socketId); // 自分の情報も更新
+
+    var playersArray = compressed[0];
+    var aiArray = compressed[1];
+    var itemsArray = compressed[2];
+    var airArray = compressed[3];
+    var flyingMissilesArray = compressed[4];
+
+    gameObj.playersMap = new Map();
+    var _iteratorNormalCompletion6 = true;
+    var _didIteratorError6 = false;
+    var _iteratorError6 = undefined;
+
+    try {
+        for (var _iterator6 = playersArray[Symbol.iterator](), _step6; !(_iteratorNormalCompletion6 = (_step6 = _iterator6.next()).done); _iteratorNormalCompletion6 = true) {
+            var compressedPlayerData = _step6.value;
+
+            var socketId = compressedPlayerData[9];
+
+            var player = {};
+            player.x = compressedPlayerData[0];
+            player.y = compressedPlayerData[1];
+            player.displayName = compressedPlayerData[2];
+            player.score = compressedPlayerData[3];
+            player.isAlive = compressedPlayerData[4];
+            player.deadCount = compressedPlayerData[5];
+            player.direction = compressedPlayerData[6];
+            player.missilesMany = compressedPlayerData[7];
+            player.airTime = compressedPlayerData[8];
+
+            gameObj.playersMap.set(socketId, player);
+
+            // 自分の情報も更新
+            if (socketId === gameObj.myPlayerObj.socketId) {
+                gameObj.myPlayerObj.x = compressedPlayerData[0];
+                gameObj.myPlayerObj.y = compressedPlayerData[1];
+                gameObj.myPlayerObj.displayName = compressedPlayerData[2];
+                gameObj.myPlayerObj.score = compressedPlayerData[3];
+                gameObj.myPlayerObj.isAlive = compressedPlayerData[4];
+                gameObj.myPlayerObj.deadCount = compressedPlayerData[5];
+                gameObj.myPlayerObj.direction = compressedPlayerData[6];
+                gameObj.myPlayerObj.missilesMany = compressedPlayerData[7];
+                gameObj.myPlayerObj.airTime = compressedPlayerData[8];
+            }
         }
-    });
+    } catch (err) {
+        _didIteratorError6 = true;
+        _iteratorError6 = err;
+    } finally {
+        try {
+            if (!_iteratorNormalCompletion6 && _iterator6.return) {
+                _iterator6.return();
+            }
+        } finally {
+            if (_didIteratorError6) {
+                throw _iteratorError6;
+            }
+        }
+    }
+
+    gameObj.AIMap = new Map();
+    var _iteratorNormalCompletion7 = true;
+    var _didIteratorError7 = false;
+    var _iteratorError7 = undefined;
+
+    try {
+        for (var _iterator7 = aiArray[Symbol.iterator](), _step7; !(_iteratorNormalCompletion7 = (_step7 = _iterator7.next()).done); _iteratorNormalCompletion7 = true) {
+            var compressedAiData = _step7.value;
+
+            var id = compressedAiData[6];
+
+            var ai = {};
+            ai.x = compressedAiData[0];
+            ai.y = compressedAiData[1];
+            ai.displayName = compressedAiData[2];
+            ai.score = compressedAiData[3];
+            ai.isAlive = compressedAiData[4];
+            ai.deadCount = compressedAiData[5];
+
+            gameObj.AIMap.set(id, ai);
+        }
+    } catch (err) {
+        _didIteratorError7 = true;
+        _iteratorError7 = err;
+    } finally {
+        try {
+            if (!_iteratorNormalCompletion7 && _iterator7.return) {
+                _iterator7.return();
+            }
+        } finally {
+            if (_didIteratorError7) {
+                throw _iteratorError7;
+            }
+        }
+    }
+
+    gameObj.itemsMap = new Map();
+    var counter = 1;
+    var _iteratorNormalCompletion8 = true;
+    var _didIteratorError8 = false;
+    var _iteratorError8 = undefined;
+
+    try {
+        for (var _iterator8 = itemsArray[Symbol.iterator](), _step8; !(_iteratorNormalCompletion8 = (_step8 = _iterator8.next()).done); _iteratorNormalCompletion8 = true) {
+            var compressedItemData = _step8.value;
+
+            gameObj.itemsMap.set(counter, { x: compressedItemData[0], y: compressedItemData[1] });
+            counter++;
+        }
+    } catch (err) {
+        _didIteratorError8 = true;
+        _iteratorError8 = err;
+    } finally {
+        try {
+            if (!_iteratorNormalCompletion8 && _iterator8.return) {
+                _iterator8.return();
+            }
+        } finally {
+            if (_didIteratorError8) {
+                throw _iteratorError8;
+            }
+        }
+    }
+
+    gameObj.airMap = new Map();
+    counter = 1;
+    var _iteratorNormalCompletion9 = true;
+    var _didIteratorError9 = false;
+    var _iteratorError9 = undefined;
+
+    try {
+        for (var _iterator9 = airArray[Symbol.iterator](), _step9; !(_iteratorNormalCompletion9 = (_step9 = _iterator9.next()).done); _iteratorNormalCompletion9 = true) {
+            var compressedAirData = _step9.value;
+
+            gameObj.airMap.set(counter, { x: compressedAirData[0], y: compressedAirData[1] });
+            counter++;
+        }
+    } catch (err) {
+        _didIteratorError9 = true;
+        _iteratorError9 = err;
+    } finally {
+        try {
+            if (!_iteratorNormalCompletion9 && _iterator9.return) {
+                _iterator9.return();
+            }
+        } finally {
+            if (_didIteratorError9) {
+                throw _iteratorError9;
+            }
+        }
+    }
+
+    gameObj.flyingMissilesMap = new Map();
+    counter = 1;
+    var _iteratorNormalCompletion10 = true;
+    var _didIteratorError10 = false;
+    var _iteratorError10 = undefined;
+
+    try {
+        for (var _iterator10 = flyingMissilesArray[Symbol.iterator](), _step10; !(_iteratorNormalCompletion10 = (_step10 = _iterator10.next()).done); _iteratorNormalCompletion10 = true) {
+            var compressedflyingMissileData = _step10.value;
+
+            gameObj.flyingMissilesMap.set(counter, {
+                x: compressedflyingMissileData[0],
+                y: compressedflyingMissileData[1],
+                direction: compressedflyingMissileData[2],
+                emitPlayerId: compressedflyingMissileData[3]
+            });
+            counter++;
+        }
+
+        /*
+        restore(compressed).then((mapData) => {
+            if (checkCounterDiff(gameObj.counter, mapData.counter, gameObj.counterMax)) { return; } // 古すぎる
+            gameObj.playersMap = new Map(mapData.playersMap);
+            gameObj.AIMap = new Map(mapData.AIMap);
+            gameObj.itemsMap = new Map(mapData.itemsMap);
+            gameObj.airMap = new Map(mapData.airMap);
+            gameObj.flyingMissilesMap = new Map(mapData.flyingMissilesMap);
+            gameObj.counter = mapData.counter;
+            if (gameObj.playersMap.has(gameObj.myPlayerObj.socketId)) {
+                gameObj.myPlayerObj = gameObj.playersMap.get(gameObj.myPlayerObj.socketId); // 自分の情報も更新
+            }
+        });
+        */
+    } catch (err) {
+        _didIteratorError10 = true;
+        _iteratorError10 = err;
+    } finally {
+        try {
+            if (!_iteratorNormalCompletion10 && _iterator10.return) {
+                _iterator10.return();
+            }
+        } finally {
+            if (_didIteratorError10) {
+                throw _iteratorError10;
+            }
+        }
+    }
+
     gameObj.socketKITENAIFlames = 0;
 });
 
