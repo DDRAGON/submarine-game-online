@@ -25,14 +25,14 @@ function createWebSocketServer(io, game) {
 
     const socketTicker = setInterval(() => {
             rootIo.emit('map data', game.getMapData()); // 全員に送信
-        /*
-            game.getMapData().then((result) => {
-                //console.log(result);
-                rootIo.emit('map data', result); // 全員に送信
-            });
-            */
+            /*
+                game.getMapData().then((result) => {
+                    //console.log(result);
+                    rootIo.emit('map data', result); // 全員に送信
+                });
+                */
         },
-        33);
+        66);
 }
 
 module.exports = {

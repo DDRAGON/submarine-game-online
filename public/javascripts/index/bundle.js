@@ -10720,8 +10720,8 @@ function moveInClient(playerObj, itemsMap, airMap, myPlayerObj, flyingMissilesMa
     if (playerObj.aliveTime.clock === 30) {
         playerObj.aliveTime.clock = 0;
         playerObj.aliveTime.seconds += 1;
-        decreaseAir(playerObj);
-        playerObj.score += 1;
+        //decreaseAir(playerObj);
+        //playerObj.score += 1;
     }
 
     // 飛んでいるミサイルの移動

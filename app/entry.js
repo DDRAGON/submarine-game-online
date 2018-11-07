@@ -690,8 +690,8 @@ function moveInClient(playerObj, itemsMap, airMap, myPlayerObj, flyingMissilesMa
     if (playerObj.aliveTime.clock === 30) {
         playerObj.aliveTime.clock = 0;
         playerObj.aliveTime.seconds += 1;
-        decreaseAir(playerObj);
-        playerObj.score += 1;
+        //decreaseAir(playerObj);
+        //playerObj.score += 1;
     }
 
     // 飛んでいるミサイルの移動
@@ -760,29 +760,29 @@ socket.on('map data', (compressed) => {
         const socketId = compressedPlayerData[9];
 
         const player = {};
-        player.x            = compressedPlayerData[0];
-        player.y            = compressedPlayerData[1];
-        player.displayName  = compressedPlayerData[2];
-        player.score        = compressedPlayerData[3];
-        player.isAlive      = compressedPlayerData[4];
-        player.deadCount    = compressedPlayerData[5];
-        player.direction    = compressedPlayerData[6];
+        player.x = compressedPlayerData[0];
+        player.y = compressedPlayerData[1];
+        player.displayName = compressedPlayerData[2];
+        player.score = compressedPlayerData[3];
+        player.isAlive = compressedPlayerData[4];
+        player.deadCount = compressedPlayerData[5];
+        player.direction = compressedPlayerData[6];
         player.missilesMany = compressedPlayerData[7];
-        player.airTime      = compressedPlayerData[8];
+        player.airTime = compressedPlayerData[8];
 
         gameObj.playersMap.set(socketId, player);
 
         // 自分の情報も更新
         if (socketId === gameObj.myPlayerObj.socketId) {
-            gameObj.myPlayerObj.x            = compressedPlayerData[0];
-            gameObj.myPlayerObj.y            = compressedPlayerData[1];
-            gameObj.myPlayerObj.displayName  = compressedPlayerData[2];
-            gameObj.myPlayerObj.score        = compressedPlayerData[3];
-            gameObj.myPlayerObj.isAlive      = compressedPlayerData[4];
-            gameObj.myPlayerObj.deadCount    = compressedPlayerData[5];
-            gameObj.myPlayerObj.direction    = compressedPlayerData[6];
+            gameObj.myPlayerObj.x = compressedPlayerData[0];
+            gameObj.myPlayerObj.y = compressedPlayerData[1];
+            gameObj.myPlayerObj.displayName = compressedPlayerData[2];
+            gameObj.myPlayerObj.score = compressedPlayerData[3];
+            gameObj.myPlayerObj.isAlive = compressedPlayerData[4];
+            gameObj.myPlayerObj.deadCount = compressedPlayerData[5];
+            gameObj.myPlayerObj.direction = compressedPlayerData[6];
             gameObj.myPlayerObj.missilesMany = compressedPlayerData[7];
-            gameObj.myPlayerObj.airTime      = compressedPlayerData[8];
+            gameObj.myPlayerObj.airTime = compressedPlayerData[8];
         }
     }
 
@@ -791,12 +791,12 @@ socket.on('map data', (compressed) => {
         const id = compressedAiData[6];
 
         const ai = {};
-        ai.x           = compressedAiData[0];
-        ai.y           = compressedAiData[1];
+        ai.x = compressedAiData[0];
+        ai.y = compressedAiData[1];
         ai.displayName = compressedAiData[2];
-        ai.score       = compressedAiData[3];
-        ai.isAlive     = compressedAiData[4];
-        ai.deadCount   = compressedAiData[5];
+        ai.score = compressedAiData[3];
+        ai.isAlive = compressedAiData[4];
+        ai.deadCount = compressedAiData[5];
 
         gameObj.AIMap.set(id, ai);
     }
@@ -804,14 +804,14 @@ socket.on('map data', (compressed) => {
     gameObj.itemsMap = new Map();
     let counter = 1;
     for (let compressedItemData of itemsArray) {
-        gameObj.itemsMap.set(counter, {x: compressedItemData[0], y: compressedItemData[1]});
+        gameObj.itemsMap.set(counter, { x: compressedItemData[0], y: compressedItemData[1] });
         counter++;
     }
 
     gameObj.airMap = new Map();
     counter = 1;
     for (let compressedAirData of airArray) {
-        gameObj.airMap.set(counter, {x: compressedAirData[0], y: compressedAirData[1]});
+        gameObj.airMap.set(counter, { x: compressedAirData[0], y: compressedAirData[1] });
         counter++;
     }
 

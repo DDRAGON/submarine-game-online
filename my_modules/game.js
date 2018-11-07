@@ -250,7 +250,7 @@ function checkGetItem(playersMap, itemsMap, airMap, flyingMissilesMap) {
                 id !== flyingMissile.emitPlayerId
             ) {
                 playerObj.isAlive = false;
-                flyingMissilesMap.delete(missileId);
+                //flyingMissilesMap.delete(missileId);
 
                 // 得点の更新
                 if (gameObj.playersMap.has(flyingMissile.emitPlayerId)) {
@@ -506,7 +506,7 @@ function createMapDataForSend(playersMap, AIMap, itemsMap, airMap, flyingMissile
     const airArray = [];
     const flyingMissilesArray = [];
 
-    for(let [playerId, plyer] of playersMap) {
+    for (let [playerId, plyer] of playersMap) {
         const playerDataForSend = [];
 
         playerDataForSend.push(plyer.x);
@@ -523,7 +523,7 @@ function createMapDataForSend(playersMap, AIMap, itemsMap, airMap, flyingMissile
         playersArray.push(playerDataForSend);
     }
 
-    for(let [aiId, ai] of AIMap) {
+    for (let [aiId, ai] of AIMap) {
         const aiDataForSend = [];
 
         aiDataForSend.push(ai.x);
