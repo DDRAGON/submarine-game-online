@@ -10842,7 +10842,7 @@ socket.on('map data', function (compressed) {
                 gameObj.myPlayerObj.score = compressedPlayerData[3];
                 gameObj.myPlayerObj.isAlive = compressedPlayerData[4];
                 gameObj.myPlayerObj.deadCount = compressedPlayerData[5];
-                gameObj.myPlayerObj.direction = compressedPlayerData[6];
+                //gameObj.myPlayerObj.direction = compressedPlayerData[6];
                 gameObj.myPlayerObj.missilesMany = compressedPlayerData[7];
                 gameObj.myPlayerObj.airTime = compressedPlayerData[8];
             }
